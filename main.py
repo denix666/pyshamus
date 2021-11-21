@@ -18,6 +18,60 @@ PLAYER_MOVEMENT_SPEED = 4
 PLAYER_INIT_X = 100
 PLAYER_INIT_Y = 390
 
+# Constants used to track if the player is facing left or right
+RIGHT_FACING = 0
+LEFT_FACING = 1
+
+
+class PlayerCharacter(arcade.Sprite):
+    """Player sprite"""
+
+    def __init__(self):
+        super().__init__()
+
+        # Default to face-right
+        self.character_face_direction = RIGHT_FACING
+
+        self.scale = CHARACTER_SCALING
+        self.cur_texture = 0
+        self.idle_texture_pair = load_texture_pair(resource_path("images/player/idle.png"))
+
+        # Load textures for walking
+        self.walk_textures = []
+        for i in range(3):
+            texture = load_texture_pair(resource_path("images/player/walk_%s.png" % i))
+            self.walk_textures.append(texture)
+
+        # Load textures for climbing
+        self.up_textures = []
+        for i in range(3):
+            texture = resource_path("images/player/up_%s.png" % i)
+            self.up_textures.append(texture)
+
+        # Set the initial texture
+        self.texture = self.idle_texture_pair[0]
+        self.hit_box = self.texture.hit_box_points
+
+    def update_animation(self, delta_time):
+        # Figure out if we need to flip face left or right
+        if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
+            self.character_face_direction = LEFT_FACING
+        elif self.change_x > 0 and self.character_face_direction == LEFT_FACING:
+            self.character_face_direction = RIGHT_FACING
+
+        # Idle animation
+        if self.change_x == 0:
+           self.texture = self.idle_texture_pair[self.character_face_direction]
+           return
+
+        # Walking animation
+        self.cur_texture += 1
+        if self.cur_texture > 2:
+            self.cur_texture = 0
+        self.texture = self.walk_textures[self.cur_texture][
+            self.character_face_direction
+        ]
+
 
 class MyGame(arcade.Window):
     """
@@ -28,7 +82,7 @@ class MyGame(arcade.Window):
         # Call the parent class and set up the window
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
         arcade.set_background_color(arcade.csscolor.BLACK)
-        self.player = None
+        self.player_sprite = None
         self.tile_map = None
         self.scene = None
         self.score = 0
@@ -57,14 +111,14 @@ class MyGame(arcade.Window):
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         # Player init
-        self.player = arcade.Sprite(resource_path("images/player.png"), CHARACTER_SCALING)
-        self.player.center_x = self.player_pos_x
-        self.player.center_y = self.player_pos_y
-        self.scene.add_sprite("Player", self.player)
+        self.player_sprite = PlayerCharacter()
+        self.player_sprite.center_x = self.player_pos_x
+        self.player_sprite.center_y = self.player_pos_y
+        self.scene.add_sprite("Player", self.player_sprite)
 
         # Create the 'physics engine'
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player, walls=self.scene["Walls"]
+            self.player_sprite, walls=self.scene["Walls"]
         )
 
         # Workaround to not allow to stop our player when key is pressed and room is changed
@@ -98,10 +152,6 @@ class MyGame(arcade.Window):
             18,
         )
 
-        # TODO remove
-        #print(self.player.center_x)
-        #print(self.player.center_y)
-
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
 
@@ -122,10 +172,10 @@ class MyGame(arcade.Window):
         """Called when the user releases a key."""
 
         if key == arcade.key.LEFT or key == arcade.key.RIGHT:
-            self.player.change_x = 0
+            self.player_sprite.change_x = 0
             self.player_direction = None
         elif key == arcade.key.UP or key == arcade.key.DOWN:
-            self.player.change_y = 0
+            self.player_sprite.change_y = 0
             self.player_direction = None
 
     def on_update(self, delta_time):
@@ -134,17 +184,22 @@ class MyGame(arcade.Window):
         # Move the player with the physics engine
         self.physics_engine.update()
 
+        # Update player animations
+        self.scene.update_animation(
+            delta_time, ["Player"]
+        )
+
         if self.player_direction == "up":
-            self.player.change_y = PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
         elif self.player_direction == "right":
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
         elif self.player_direction == "left":
-            self.player.change_x = -PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
         elif self.player_direction == "down":
-            self.player.change_y = -PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
 
         hit_list = arcade.check_for_collision_with_list(
-            sprite=self.player,
+            sprite=self.player_sprite,
             sprite_list=self.scene["Exits"]
         )
 
@@ -154,12 +209,12 @@ class MyGame(arcade.Window):
 
             # Соблюдение позиции при переходе между комнатами
             if hit.properties["x"] == 9999:
-                self.player_pos_x = self.player.center_x
+                self.player_pos_x = self.player_sprite.center_x
             else:
                 self.player_pos_x = hit.properties["x"]
 
             if hit.properties["y"] == 9999:
-                self.player_pos_y = self.player.center_y
+                self.player_pos_y = self.player_sprite.center_y
             else:
                 self.player_pos_y = hit.properties["y"]
 
