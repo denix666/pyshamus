@@ -11,16 +11,43 @@ SCREEN_TITLE = "PyShamus v0.1"
 CHARACTER_SCALING = 1
 TILE_SCALING = 0.2
 
-# Movement speed of player, in pixels per frame
-PLAYER_MOVEMENT_SPEED = 4
+# Movement speed of player, in pixels per frame (3)
+PLAYER_MOVEMENT_SPEED = 8
 
-# Start player in coordinates 100/390
+# Start player in coordinates (100/390)
 PLAYER_INIT_X = 100
 PLAYER_INIT_Y = 390
 
-# Constants used to track if the player is facing left or right
+# Constants used to track if the player is facing left or right (index of texture pair array)
 RIGHT_FACING = 0
 LEFT_FACING = 1
+
+
+class Enemy(arcade.Sprite):
+    """Enemy sprite"""
+
+    def __init__(self):
+        super().__init__()
+
+        self.scale = CHARACTER_SCALING
+        self.cur_texture = 0
+        self.update_interval = 0
+
+        # Load textures for enemy
+        self.enemy_textures = []
+        for i in range(3):
+            texture = arcade.load_texture(resource_path("images/enemy/yel_%s.png" % i))
+            self.enemy_textures.append(texture)
+
+    def update_animation(self, delta_time):
+        # Enemy animation
+        self.update_interval += 1
+        if self.update_interval > 4:
+            self.update_interval = 0
+            self.cur_texture += 1
+            if self.cur_texture > 2:
+                self.cur_texture = 0
+            self.texture = self.enemy_textures[self.cur_texture]
 
 
 class PlayerCharacter(arcade.Sprite):
@@ -29,30 +56,50 @@ class PlayerCharacter(arcade.Sprite):
     def __init__(self):
         super().__init__()
 
-        # Default to face-right
-        self.character_face_direction = RIGHT_FACING
-
         self.scale = CHARACTER_SCALING
         self.cur_texture = 0
-        self.idle_texture_pair = load_texture_pair(resource_path("images/player/idle.png"))
 
-        # Load textures for walking
+        self.character_face_direction = RIGHT_FACING
+
+        # Load idle texture
+        self.idle_texture = arcade.load_texture(resource_path("images/player/idle.png"))
+
+        # Load textures for walk left right
         self.walk_textures = []
         for i in range(3):
             texture = load_texture_pair(resource_path("images/player/walk_%s.png" % i))
             self.walk_textures.append(texture)
 
-        # Load textures for climbing
+        # Load textures for climbing up
         self.up_textures = []
         for i in range(3):
-            texture = resource_path("images/player/up_%s.png" % i)
+            texture = arcade.load_texture(resource_path("images/player/up_%s.png" % i))
             self.up_textures.append(texture)
 
+        # Load textures for climbing up
+        self.down_textures = []
+        for i in range(3):
+            texture = arcade.load_texture(resource_path("images/player/down_%s.png" % i))
+            self.down_textures.append(texture)
+
         # Set the initial texture
-        self.texture = self.idle_texture_pair[0]
+        self.texture = self.idle_texture
         self.hit_box = self.texture.hit_box_points
 
     def update_animation(self, delta_time):
+        if self.change_y < 0:
+            self.cur_texture += 1
+            if self.cur_texture > 2:
+                self.cur_texture = 0
+            self.texture = self.down_textures[self.cur_texture]
+            return
+        elif self.change_y > 0:
+            self.cur_texture += 1
+            if self.cur_texture > 2:
+                self.cur_texture = 0
+            self.texture = self.up_textures[self.cur_texture]
+            return
+
         # Figure out if we need to flip face left or right
         if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
             self.character_face_direction = LEFT_FACING
@@ -61,8 +108,8 @@ class PlayerCharacter(arcade.Sprite):
 
         # Idle animation
         if self.change_x == 0:
-           self.texture = self.idle_texture_pair[self.character_face_direction]
-           return
+            self.texture = self.idle_texture
+            return
 
         # Walking animation
         self.cur_texture += 1
@@ -83,6 +130,7 @@ class MyGame(arcade.Window):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
         arcade.set_background_color(arcade.csscolor.BLACK)
         self.player_sprite = None
+        self.enemy = None
         self.tile_map = None
         self.scene = None
         self.score = 0
@@ -115,6 +163,12 @@ class MyGame(arcade.Window):
         self.player_sprite.center_x = self.player_pos_x
         self.player_sprite.center_y = self.player_pos_y
         self.scene.add_sprite("Player", self.player_sprite)
+
+        # Enemies init
+        self.enemy = Enemy()
+        self.enemy.center_x = 300
+        self.enemy.center_y = 390
+        self.scene.add_sprite("Enemies", self.enemy)
 
         # Create the 'physics engine'
         self.physics_engine = arcade.PhysicsEngineSimple(
@@ -187,6 +241,10 @@ class MyGame(arcade.Window):
         # Update player animations
         self.scene.update_animation(
             delta_time, ["Player"]
+        )
+
+        self.scene.update_animation(
+            delta_time, ["Enemies"]
         )
 
         if self.player_direction == "up":
