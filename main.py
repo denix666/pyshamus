@@ -12,7 +12,7 @@ CHARACTER_SCALING = 1
 TILE_SCALING = 0.2
 
 # Movement speed of player, in pixels per frame (3)
-PLAYER_MOVEMENT_SPEED = 8
+PLAYER_MOVEMENT_SPEED = 3
 
 # Start player in coordinates (100/390)
 PLAYER_INIT_X = 100
@@ -26,7 +26,7 @@ LEFT_FACING = 1
 class Enemy(arcade.Sprite):
     """Enemy sprite"""
 
-    def __init__(self):
+    def __init__(self, enemy_type):
         super().__init__()
 
         self.scale = CHARACTER_SCALING
@@ -36,8 +36,11 @@ class Enemy(arcade.Sprite):
         # Load textures for enemy
         self.enemy_textures = []
         for i in range(3):
-            texture = arcade.load_texture(resource_path("images/enemy/yel_%s.png" % i))
+            texture = arcade.load_texture(resource_path("images/enemy/%s_%s.png" % (enemy_type, i)))
             self.enemy_textures.append(texture)
+
+        self.texture = self.enemy_textures[0]
+        self.hit_box = self.texture.hit_box_points
 
     def update_animation(self, delta_time):
         # Enemy animation
@@ -130,10 +133,12 @@ class MyGame(arcade.Window):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
         arcade.set_background_color(arcade.csscolor.BLACK)
         self.player_sprite = None
-        self.enemy = None
+        self.enemy_sprite = None
         self.tile_map = None
+        self.spawn_list = None
         self.scene = None
         self.score = 0
+        self.level = 1
         self.room = "00"
         self.camera = None
         self.gui_camera = None
@@ -154,9 +159,15 @@ class MyGame(arcade.Window):
             "Walls": {
                 "use_spatial_hash": True,
             },
+            "EnemySpawn": {
+                "use_spatial_hash": True,
+            },
         }
+
         self.tile_map = arcade.load_tilemap(resource_path("maps/room_"+self.room+".json"), TILE_SCALING, layer_options)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
+
+        spawn_list = self.scene["EnemySpawn"]
 
         # Player init
         self.player_sprite = PlayerCharacter()
@@ -165,14 +176,17 @@ class MyGame(arcade.Window):
         self.scene.add_sprite("Player", self.player_sprite)
 
         # Enemies init
-        self.enemy = Enemy()
-        self.enemy.center_x = 300
-        self.enemy.center_y = 390
-        self.scene.add_sprite("Enemies", self.enemy)
+        for i in range(0, 8):
+            rand_index = random_enemy_index()
+            self.enemy_sprite = Enemy("yel")
+            self.enemy_sprite.center_x = spawn_list[rand_index].center_x
+            self.enemy_sprite.center_y = spawn_list[rand_index].center_y
+            self.scene.add_sprite("Enemies", self.enemy_sprite)
 
         # Create the 'physics engine'
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite, walls=self.scene["Walls"]
+            self.player_sprite,
+            walls=self.scene["Walls"]
         )
 
         # Workaround to not allow to stop our player when key is pressed and room is changed
@@ -277,6 +291,29 @@ class MyGame(arcade.Window):
                 self.player_pos_y = hit.properties["y"]
 
             self.setup()
+
+        for en in self.scene["Enemies"]:
+            if en.center_y < self.player_sprite.center_y:
+                en.center_y += 1
+                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                    en.center_y -= 1
+            else:
+                en.center_y -= 1
+                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                    en.center_y += 1
+
+            if en.center_x < self.player_sprite.center_x:
+                en.center_x += 1
+                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                    en.center_x -= 1
+            else:
+                en.center_x -= 1
+                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                    en.center_x += 1
 
 
 def main():
