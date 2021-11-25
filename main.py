@@ -15,7 +15,7 @@ TILE_SCALING = 0.2
 PLAYER_MOVEMENT_SPEED = 3
 
 # Start player in coordinates (100/390)
-PLAYER_INIT_X = 100
+PLAYER_INIT_X = 1100
 PLAYER_INIT_Y = 390
 
 # Constants used to track if the player is facing left or right (index of texture pair array)
@@ -176,11 +176,13 @@ class MyGame(arcade.Window):
         self.scene.add_sprite("Player", self.player_sprite)
 
         # Enemies init
-        for i in range(0, 8):
-            rand_index = random_enemy_index()
-            self.enemy_sprite = Enemy("yel")
-            self.enemy_sprite.center_x = spawn_list[rand_index].center_x
-            self.enemy_sprite.center_y = spawn_list[rand_index].center_y
+        amount_of_enemy = 3 * self.level
+        rand_indexes = random.sample(range(0, 12), amount_of_enemy)
+        for i in rand_indexes:
+            enemy_type = random.choice(("yel", "red"))
+            self.enemy_sprite = Enemy(enemy_type)
+            self.enemy_sprite.center_x = spawn_list[i].center_x
+            self.enemy_sprite.center_y = spawn_list[i].center_y
             self.scene.add_sprite("Enemies", self.enemy_sprite)
 
         # Create the 'physics engine'
