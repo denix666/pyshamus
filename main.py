@@ -1,5 +1,6 @@
 import arcade
 from helpers import *
+import time
 
 
 # Main sizes
@@ -85,11 +86,25 @@ class PlayerCharacter(arcade.Sprite):
             texture = arcade.load_texture(resource_path("images/player/down_%s.png" % i))
             self.down_textures.append(texture)
 
+        # Load textures of die
+        self.die_textures = []
+        for i in range(3):
+            texture = arcade.load_texture(resource_path("images/player/die_%s.png" % i))
+            self.die_textures.append(texture)
+
         # Set the initial texture
         self.texture = self.idle_texture
         self.hit_box = self.texture.hit_box_points
 
     def update_animation(self, delta_time):
+        #if self.died == 1:
+        #    print("die")
+        #    self.cur_texture += 1
+        #    if self.cur_texture > 2:
+        #        self.cur_texture = 0
+        #    self.texture = self.die_textures[self.cur_texture]
+        #    return
+
         if self.change_y < 0:
             self.cur_texture += 1
             if self.cur_texture > 2:
@@ -139,6 +154,7 @@ class MyGame(arcade.Window):
         self.scene = None
         self.score = 0
         self.level = 1
+        self.lives = 5
         self.room = "00"
         self.camera = None
         self.gui_camera = None
@@ -147,6 +163,8 @@ class MyGame(arcade.Window):
         self.player_pos_y = PLAYER_INIT_Y
         self.player_direction = None
         self.last_direction = None
+
+        self.die_sound = arcade.load_sound(resource_path("sounds/die.ogg"))
 
     def setup(self):
         """Set up the game here. Call this function to restart the game."""
@@ -202,6 +220,11 @@ class MyGame(arcade.Window):
         self.scene.draw()
         self.gui_camera.use()
 
+        # Изображение жизни и первоначальные координаты
+        live_texture = arcade.load_texture(resource_path("images/player/idle.png"))
+        live_texture_x = 1155
+        live_texture_y = 740
+
         # Draw our score on the screen, scrolling it with the viewport
         score_text = f"Score: {self.score}"
         arcade.draw_text(
@@ -221,6 +244,38 @@ class MyGame(arcade.Window):
             arcade.csscolor.WHITE,
             18,
         )
+
+        # Draw level number on the screen
+        level_text = f"Level: {self.level}"
+        arcade.draw_text(
+            level_text,
+            10,
+            65,
+            arcade.csscolor.WHITE,
+            18,
+        )
+
+        # Отображение кол-ва жизней
+        if self.lives >= 13:
+            lives_to_draw = 12
+        else:
+            lives_to_draw = self.lives-1
+
+        for i in range(0, lives_to_draw):
+            x = live_texture_x + 30 * i
+            if 3 < i < 8:
+                y = live_texture_y - 30
+                x = live_texture_x + 30 * (i - 4)
+            elif i > 7:
+                y = live_texture_y - 60
+                x = live_texture_x + 30 * (i - 8)
+            else:
+                y = live_texture_y
+            arcade.draw_texture_rectangle(live_texture.width//2 + x,
+                                          live_texture.height//2 + y,
+                                          live_texture.width,
+                                          live_texture.height,
+                                          live_texture, 0)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
@@ -316,6 +371,13 @@ class MyGame(arcade.Window):
                 if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
                         arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
                     en.center_x += 1
+
+        if arcade.check_for_collision_with_list(sprite=self.player_sprite, sprite_list=self.scene["Enemies"]):
+            self.lives -= 1
+            arcade.play_sound(self.die_sound)
+            self.last_direction = None
+            time.sleep(1)
+            self.setup()
 
 
 def main():
