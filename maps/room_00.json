@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"room_01.json"
+        }
+    },
  "height":30,
  "infinite":false,
  "layers":[
@@ -8,6 +16,12 @@
          "id":1,
          "name":"Walls",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"x",
+                 "type":"int",
+                 "value":1200
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":50,
@@ -99,9 +113,9 @@
              "width":1
             },
          "margin":0,
-         "name":"00",
+         "name":"tileset",
          "spacing":0,
-         "tilecount":4,
+         "tilecount":10,
          "tileheight":24,
          "tiles":[
                 {
@@ -125,6 +139,42 @@
                 {
                  "id":4,
                  "image":"..\/images\/black.png",
+                 "imageheight":24,
+                 "imagewidth":24
+                }, 
+                {
+                 "id":5,
+                 "image":"..\/images\/bk_01.png",
+                 "imageheight":24,
+                 "imagewidth":24
+                }, 
+                {
+                 "id":6,
+                 "image":"..\/images\/bk_03.png",
+                 "imageheight":24,
+                 "imagewidth":24
+                }, 
+                {
+                 "id":7,
+                 "image":"..\/images\/bk_04.png",
+                 "imageheight":24,
+                 "imagewidth":24
+                }, 
+                {
+                 "id":8,
+                 "image":"..\/images\/bk_05.png",
+                 "imageheight":24,
+                 "imagewidth":24
+                }, 
+                {
+                 "id":9,
+                 "image":"..\/images\/bk_06.png",
+                 "imageheight":24,
+                 "imagewidth":24
+                }, 
+                {
+                 "id":10,
+                 "image":"..\/images\/bk_16.png",
                  "imageheight":24,
                  "imagewidth":24
                 }],

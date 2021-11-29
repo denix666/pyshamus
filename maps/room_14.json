@@ -1,12 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "format":"json",
-         "target":"room_10.json"
-        }
-    },
  "height":30,
  "infinite":false,
  "layers":[
@@ -31,12 +23,12 @@
                  "gid":3,
                  "height":144.060606060606,
                  "id":1,
-                 "name":"to 02",
+                 "name":"to 15",
                  "properties":[
                         {
                          "name":"to_room",
                          "type":"string",
-                         "value":"02"
+                         "value":"15"
                         }, 
                         {
                          "name":"x",
@@ -59,12 +51,12 @@
                  "gid":3,
                  "height":144,
                  "id":5,
-                 "name":"to 00",
+                 "name":"to 13",
                  "properties":[
                         {
                          "name":"to_room",
                          "type":"string",
-                         "value":"00"
+                         "value":"13"
                         }, 
                         {
                          "name":"x",
@@ -87,12 +79,12 @@
                  "gid":3,
                  "height":9.33333333333326,
                  "id":6,
-                 "name":"to 08",
+                 "name":"to 21",
                  "properties":[
                         {
                          "name":"to_room",
                          "type":"string",
-                         "value":"08"
+                         "value":"21"
                         }, 
                         {
                          "name":"x",

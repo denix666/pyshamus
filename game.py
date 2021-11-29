@@ -14,7 +14,13 @@ class IntroView(arcade.View):
         intro_texture = arcade.load_texture(resource_path("images/intro.png"))
         arcade.draw_texture_rectangle(intro_texture.width // 2,
                                       intro_texture.height // 2, SCREEN_WIDTH, SCREEN_HEIGHT, intro_texture)
-        arcade.draw_text("Hit 'space' to start game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
+
+        # Show intro and instructions for game
+        arcade.draw_text("SPACE - Shoot", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 150,
+                         arcade.color.YELLOW, font_size=30, anchor_x="center")
+        arcade.draw_text("Up, Down, Left, Right - walk", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 200,
+                         arcade.color.YELLOW, font_size=30, anchor_x="center")
+        arcade.draw_text("Hit SPACE to start game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 170,
                          arcade.color.YELLOW, font_size=30, anchor_x="center")
 
     def on_key_press(self, key, modifiers):

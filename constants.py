@@ -12,7 +12,7 @@ CHARACTER_SCALING = 1
 TILE_SCALING = 1
 
 # Start player in coordinates (100/390)
-PLAYER_INIT_X = 1100
+PLAYER_INIT_X = 100
 PLAYER_INIT_Y = 390
 
 # Movement speed of player, in pixels per frame (3)
