@@ -1,13 +1,22 @@
 import random
+import time
 import arcade.color
-from player import *
+import pygame
+from game_player import *
 from helpers import *
 from enemy import Enemy
 
 
 class IntroView(arcade.View):
+    def __init__(self):
+        super().__init__()
+        pygame.mixer.init()
+        self.intro_music = pygame.mixer.Sound(resource_path("sounds/intro.mp3"))
+        self.intro_music.set_volume(0.3)
+
     def on_show(self):
         arcade.set_background_color(arcade.color.BLACK)
+        pygame.mixer.Sound.play(self.intro_music, -1)
 
     def on_draw(self):
         arcade.start_render()
@@ -16,15 +25,16 @@ class IntroView(arcade.View):
                                       intro_texture.height // 2, SCREEN_WIDTH, SCREEN_HEIGHT, intro_texture)
 
         # Show intro and instructions for game
-        arcade.draw_text("SPACE - Shoot", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 150,
+        arcade.draw_text("SPACE - Shoot", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
                          arcade.color.YELLOW, font_size=30, anchor_x="center")
-        arcade.draw_text("Up, Down, Left, Right - walk", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 200,
+        arcade.draw_text("Up, Down, Left, Right - walk", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 210,
                          arcade.color.YELLOW, font_size=30, anchor_x="center")
-        arcade.draw_text("Hit SPACE to start game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 170,
+        arcade.draw_text("Hit SPACE to start game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 300,
                          arcade.color.YELLOW, font_size=30, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.SPACE or key == arcade.key.ESCAPE:
+            pygame.mixer.Sound.stop(self.intro_music)
             game_view = GameView()
             game_view.setup()
             self.window.show_view(game_view)
@@ -104,7 +114,7 @@ class GameView(arcade.View):
 
         # Add player
         self.player_list = arcade.SpriteList()
-        self.player_sprite = Player()
+        self.player_sprite = GamePlayer()
         self.player_sprite.center_x = self.player_pos_x
         self.player_sprite.center_y = self.player_pos_y
         self.scene.add_sprite("Player", self.player_sprite)
@@ -232,8 +242,49 @@ class GameView(arcade.View):
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
             self.bullet_direction = "right"
 
+        # Вычисление стрельбы "наискосок"
+        if self.player_sprite.change_x > 0 and self.player_sprite.change_y > 0:
+            self.bullet_direction = "up_right"
+
+        if self.player_sprite.change_x < 0 and self.player_sprite.change_y > 0:
+            self.bullet_direction = "up_left"
+
+        if self.player_sprite.change_x > 0 and self.player_sprite.change_y < 0:
+            self.bullet_direction = "down_right"
+
+        if self.player_sprite.change_x < 0 and self.player_sprite.change_y < 0:
+            self.bullet_direction = "down_left"
+
         if self.fire_pressed:
             bullet = arcade.Sprite(resource_path("images/bullet.png"), BULLET_SCALLING)
+
+            if self.bullet_direction == "up_right":
+                bullet.angle = 45
+                bullet.center_x = self.player_sprite.center_x + 10
+                bullet.center_y = self.player_sprite.center_y + 10
+                bullet.change_x = BULLET_SPEED
+                bullet.change_y = BULLET_SPEED
+
+            if self.bullet_direction == "up_left":
+                bullet.angle = 135
+                bullet.center_x = self.player_sprite.center_x - 10
+                bullet.center_y = self.player_sprite.center_y + 10
+                bullet.change_x = -BULLET_SPEED
+                bullet.change_y = BULLET_SPEED
+
+            if self.bullet_direction == "down_right":
+                bullet.angle = 315
+                bullet.center_x = self.player_sprite.center_x + 10
+                bullet.center_y = self.player_sprite.center_y - 10
+                bullet.change_x = BULLET_SPEED
+                bullet.change_y = -BULLET_SPEED
+
+            if self.bullet_direction == "down_left":
+                bullet.angle = 225
+                bullet.center_x = self.player_sprite.center_x - 10
+                bullet.center_y = self.player_sprite.center_y - 10
+                bullet.change_x = -BULLET_SPEED
+                bullet.change_y = -BULLET_SPEED
 
             if self.bullet_direction == "down":
                 bullet.angle = 270

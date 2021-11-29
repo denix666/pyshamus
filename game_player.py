@@ -1,6 +1,3 @@
-import time
-
-import arcade
 from helpers import *
 from constants import *
 
@@ -9,7 +6,7 @@ RIGHT_FACING = 0
 LEFT_FACING = 1
 
 
-class Player(arcade.Sprite):
+class GamePlayer(arcade.Sprite):
     def __init__(self):
         super().__init__()
 
