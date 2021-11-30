@@ -98,16 +98,6 @@ class DieAnimation(arcade.Sprite):
         self.textures = self.die_textures
 
     def update(self):
-        # Update to the next frame of the animation. If we are at the end
-        # of our frames, then delete this sprite.
-        #self.current_texture += 1
-        #time.sleep(1)
-        #if self.current_texture < len(self.textures):
-        #    self.set_texture(self.current_texture)
-        #    print(self.current_texture)
-        #else:
-            #self.remove_from_sprite_lists()
-
         self.cur_texture += 1
         if self.cur_texture > 2:
             self.cur_texture = 0

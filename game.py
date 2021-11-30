@@ -3,8 +3,10 @@ import time
 import arcade.color
 import pygame
 from game_player import *
-from helpers import *
+from key import *
 from enemy import Enemy
+from animations import *
+from numpy import array
 
 
 class IntroView(arcade.View):
@@ -12,7 +14,7 @@ class IntroView(arcade.View):
         super().__init__()
         pygame.mixer.init()
         self.intro_music = pygame.mixer.Sound(resource_path("sounds/intro.mp3"))
-        self.intro_music.set_volume(0.3)
+        self.intro_music.set_volume(0.6)
 
     def on_show(self):
         arcade.set_background_color(arcade.color.BLACK)
@@ -64,6 +66,10 @@ class GameOverView(arcade.View):
             game_view.setup()
             self.window.show_view(game_view)
 
+###########################################################################
+# Game code ###############################################################
+###########################################################################
+
 
 class GameView(arcade.View):
     def __init__(self):
@@ -72,6 +78,8 @@ class GameView(arcade.View):
         # Set sounds and colors
         arcade.set_background_color(arcade.csscolor.BLACK)
         self.die_sound = arcade.load_sound(resource_path("sounds/die.wav"))
+        self.walk_sound = pygame.mixer.Sound(resource_path("sounds/walk.wav"))
+        self.key_sound = arcade.load_sound(resource_path("sounds/key.wav"))
         self.enemy_destroyed = arcade.load_sound(resource_path("sounds/enemy_destroyed.wav"))
 
         self.player_list = None
@@ -80,7 +88,9 @@ class GameView(arcade.View):
         self.last_player_direction = None
         self.enemy_sprite = None
         self.bullet_list = None
-        self.room = "00"
+        self.key_list = None
+        self.key_sprite = None
+        self.room = "01"
         self.score = 0
         self.lives = 5
         self.level = 1
@@ -90,6 +100,21 @@ class GameView(arcade.View):
         self.player_pos_x = PLAYER_INIT_X
         self.player_pos_y = PLAYER_INIT_Y
         self.bullet_direction = None
+        self.enemy_explosion_list = None
+        self.enemy_explosion_sprite = None
+
+        # Keys info
+        # 0 - Don't have a key
+        # 1 - Have a key
+        # 2 - A key was already used
+        self.keys = array([["blue", "0"],
+                           ['orange', "0"],
+                           ['red', "0"],
+                           ['purple', "0"],
+                           ['green', "0"],
+                           ['cyan', "0"],
+                           ['brown', "0"]
+                           ])
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -98,6 +123,7 @@ class GameView(arcade.View):
         self.down_pressed = False
         self.fire_pressed = False
 
+    # noinspection PyBroadException
     def setup(self):
         # Load tile map
         layer_options = {
@@ -119,7 +145,15 @@ class GameView(arcade.View):
         self.player_sprite.center_y = self.player_pos_y
         self.scene.add_sprite("Player", self.player_sprite)
 
+        # Enemy explosion animation
+        self.enemy_explosion_list = arcade.SpriteList()
+        self.enemy_explosion_sprite = EnemyExplosion()
+
+        # Init bullets list
         self.bullet_list = arcade.SpriteList()
+
+        # Init key list
+        self.key_list = arcade.SpriteList()
 
         # Create the 'physics engine'
         self.physics_engine = arcade.PhysicsEngineSimple(
@@ -127,8 +161,33 @@ class GameView(arcade.View):
             walls=self.scene["Walls"]
         )
 
+        # Add key in random place of the map only if it wasn't used or taken already
+        try:
+            for i in range(0, 7):
+                if self.keys[i][0] == self.scene["Properties"][1].properties["key"]:
+                    if self.keys[i][1] == "0":
+                        key_type = self.scene["Properties"][1].properties["key"]
+                        item_placed_successfully = False
+                        self.key_sprite = Key(key_type)
+                        while not item_placed_successfully:
+                            self.key_sprite.center_x = random.randrange(180, SCREEN_WIDTH - 200)
+                            self.key_sprite.center_y = random.randrange(180, SCREEN_HEIGHT - 200)
+
+                            wall_hit_list = arcade.check_for_collision_with_list(self.key_sprite,
+                                                                                 sprite_list=self.scene["Walls"])
+                            if len(wall_hit_list) == 0:
+                                item_placed_successfully = True
+                        self.scene.add_sprite("Keys", self.key_sprite)
+                        self.key_list.append(self.key_sprite)
+        except:
+            pass
+
         # Add random enemies
-        amount_of_enemy = 3 * self.level
+        try:
+            amount_of_enemy = self.scene["Properties"][1].properties["amount_of_enemy"] * self.level
+        except:
+            amount_of_enemy = 3 * self.level
+
         for i in range(amount_of_enemy):
             enemy_placed_successfully = False
 
@@ -161,6 +220,7 @@ class GameView(arcade.View):
         self.player_list.draw()
         self.scene.draw()
         self.bullet_list.draw()
+        self.enemy_explosion_list.draw()
 
         # Отображение надписей статуса игры
         arcade.draw_text(f"Score: {self.score}", 10, 10, arcade.color.WHITE, 15)
@@ -218,6 +278,8 @@ class GameView(arcade.View):
 
         self.bullet_list.update()
 
+        self.enemy_explosion_list.update()
+
         self.scene.update_animation(
             delta_time, ["Player"]
         )
@@ -225,6 +287,10 @@ class GameView(arcade.View):
         self.scene.update_animation(
             delta_time, ["Enemies"]
         )
+
+        # TODO Проигрывание звука шагов при передвижении (improve sound effect)
+        if self.player_sprite.change_y or self.player_sprite.change_x:
+            pygame.mixer.Sound.play(self.walk_sound, 0, 1)
 
         # Передвижение игрока
         self.player_sprite.change_x = 0
@@ -339,28 +405,28 @@ class GameView(arcade.View):
         for en in self.scene["Enemies"]:
             if en.center_y < self.player_sprite.center_y:
                 en.center_y += 1
-                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
-                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                if arcade.check_for_collision_with_list(en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(en, sprite_list=self.scene["Enemies"]):
                     en.center_y -= 1
             else:
                 en.center_y -= 1
-                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
-                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                if arcade.check_for_collision_with_list(en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(en, sprite_list=self.scene["Enemies"]):
                     en.center_y += 1
 
             if en.center_x < self.player_sprite.center_x:
                 en.center_x += 1
-                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
-                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                if arcade.check_for_collision_with_list(en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(en, sprite_list=self.scene["Enemies"]):
                     en.center_x -= 1
             else:
                 en.center_x -= 1
-                if arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Walls"]) or \
-                        arcade.check_for_collision_with_list(sprite=en, sprite_list=self.scene["Enemies"]):
+                if arcade.check_for_collision_with_list(en, sprite_list=self.scene["Walls"]) or \
+                        arcade.check_for_collision_with_list(en, sprite_list=self.scene["Enemies"]):
                     en.center_x += 1
 
         # Check if player collided with enemy
-        if arcade.check_for_collision_with_list(sprite=self.player_sprite, sprite_list=self.scene["Enemies"]):
+        if arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.scene["Enemies"]):
             self.lives -= 1
             arcade.play_sound(self.die_sound)
             time.sleep(1)
@@ -369,6 +435,17 @@ class GameView(arcade.View):
                 self.window.show_view(game_view)
             self.setup()
 
+        # Проверка подобрал ли игрок ключ
+        for key_hit in self.key_list:
+            if arcade.check_for_collision_with_list(self.player_sprite, self.key_list):
+                key_hit.remove_from_sprite_lists()
+                arcade.play_sound(self.key_sound)
+                for i in range(0, 7):
+                    if self.keys[i][0] == self.scene["Properties"][1].properties["key"]:
+                        self.keys[i][1] = "1"
+                        return
+
+        # Проверка попала ли пуля куда-нибудь
         for bullet in self.bullet_list:
             hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.scene["Enemies"])
 
@@ -380,6 +457,12 @@ class GameView(arcade.View):
                 enemy.remove_from_sprite_lists()
                 self.score += 5
                 arcade.sound.play_sound(self.enemy_destroyed)
+
+                explosion = EnemyExplosion()
+                explosion.center_y = hit_list[0].center_y
+                explosion.center_x = hit_list[0].center_x
+                explosion.update()
+                self.enemy_explosion_list.append(explosion)
 
             # Удалить выстрелы попавшие в стены
             hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.scene["Walls"])

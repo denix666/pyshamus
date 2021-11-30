@@ -9,11 +9,12 @@ class Enemy(arcade.Sprite):
         self.scale = CHARACTER_SCALING
         self.cur_texture = 0
         self.update_interval = 0
+        self.enemy_type = enemy_type
 
         # Load textures for enemy
         self.enemy_textures = []
         for i in range(3):
-            texture = arcade.load_texture(resource_path("images/enemy/%s_%s.png" % (enemy_type, i)))
+            texture = arcade.load_texture(resource_path("images/enemy/%s_%s.png" % (self.enemy_type, i)))
             self.enemy_textures.append(texture)
 
         self.texture = self.enemy_textures[0]
