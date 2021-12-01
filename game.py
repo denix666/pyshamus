@@ -90,7 +90,7 @@ class GameView(arcade.View):
         self.bullet_list = None
         self.key_list = None
         self.key_sprite = None
-        self.room = "01"
+        self.room = "00"
         self.score = 0
         self.lives = 5
         self.level = 1
@@ -227,6 +227,15 @@ class GameView(arcade.View):
         arcade.draw_text(f"Room: {self.room}", 10, 35, arcade.color.YELLOW, 15)
         arcade.draw_text(f"Level: {self.level}", 10, 65, arcade.color.RED_DEVIL, 15)
 
+        # Отображение собранных ключей
+        have_number_of_keys = 0
+        for i in range(0, 7):
+            if self.keys[i][1] == "1":
+                have_number_of_keys += 1
+                key_texture = arcade.load_texture(resource_path("images/keys/%s.png" % self.keys[i][0]))
+                key_texture_x = KEY_TEXTURE_X + 40 * have_number_of_keys
+                key_texture.draw_scaled(key_texture_x, KEY_TEXTURE_Y, KEY_SCALING)
+
         # Отображение кол-ва жизней
         live_texture = arcade.load_texture(resource_path("images/player/idle.png"))
         if self.lives >= 13:
@@ -322,7 +331,7 @@ class GameView(arcade.View):
             self.bullet_direction = "down_left"
 
         if self.fire_pressed:
-            bullet = arcade.Sprite(resource_path("images/bullet.png"), BULLET_SCALLING)
+            bullet = arcade.Sprite(resource_path("images/bullet.png"), BULLET_SCALING)
 
             if self.bullet_direction == "up_right":
                 bullet.angle = 45
