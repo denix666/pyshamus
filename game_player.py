@@ -80,25 +80,3 @@ class GamePlayer(arcade.Sprite):
         elif self.top > SCREEN_HEIGHT - 1:
             self.top = SCREEN_HEIGHT - 1
 
-
-class DieAnimation(arcade.Sprite):
-    def __init__(self):
-        super().__init__()
-
-        self.scale = CHARACTER_SCALING
-
-        # Load textures of die
-        self.die_textures = []
-        for i in range(3):
-            texture = arcade.load_texture(resource_path("images/player/die_%s.png" % i))
-            self.die_textures.append(texture)
-
-        # Start at the first frame
-        self.cur_texture = 0
-        self.textures = self.die_textures
-
-    def update(self):
-        self.cur_texture += 1
-        if self.cur_texture > 2:
-            self.cur_texture = 0
-        self.texture = self.die_textures[self.cur_texture]

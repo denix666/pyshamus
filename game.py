@@ -5,6 +5,8 @@ import pygame
 from game_player import *
 from key import *
 from enemy import Enemy
+from water import Water
+from question import Question
 from animations import *
 from numpy import array
 
@@ -53,7 +55,7 @@ class GameOverView(arcade.View):
                                       intro_texture.height // 2, SCREEN_WIDTH, SCREEN_HEIGHT, intro_texture)
         arcade.draw_text("Game over!", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
                          arcade.color.YELLOW, font_size=30, anchor_x="center")
-        arcade.draw_text("Hit 'space' to start new game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 250,
+        arcade.draw_text("Hit SPACE to start new game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 250,
                          arcade.color.YELLOW, font_size=30, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
@@ -80,6 +82,8 @@ class GameView(arcade.View):
         self.die_sound = arcade.load_sound(resource_path("sounds/die.wav"))
         self.walk_sound = pygame.mixer.Sound(resource_path("sounds/walk.wav"))
         self.key_sound = arcade.load_sound(resource_path("sounds/key.wav"))
+        self.life_sound = arcade.load_sound(resource_path("sounds/life.wav"))
+        self.question_sound = arcade.load_sound(resource_path("sounds/question.wav"))
         self.enemy_destroyed = arcade.load_sound(resource_path("sounds/enemy_destroyed.wav"))
 
         self.player_list = None
@@ -102,8 +106,15 @@ class GameView(arcade.View):
         self.bullet_direction = None
         self.enemy_explosion_list = None
         self.enemy_explosion_sprite = None
+        self.water_sprite = None
+        self.water_list = None
+        self.question_sprite = None
+        self.question_list = None
 
-        # Keys info
+        self.water_used_in_rooms = []
+        self.question_used_in_rooms = []
+
+        # Keys info array
         # 0 - Don't have a key
         # 1 - Have a key
         # 2 - A key was already used
@@ -155,13 +166,57 @@ class GameView(arcade.View):
         # Init key list
         self.key_list = arcade.SpriteList()
 
+        # Init water list
+        self.water_list = arcade.SpriteList()
+
+        # Init question list
+        self.question_list = arcade.SpriteList()
+
         # Create the 'physics engine'
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
             walls=self.scene["Walls"]
         )
 
-        # Add key in random place of the map only if it wasn't used or taken already
+        # Add water with life in random place of the room if it defined in that room
+        try:
+            if self.scene["Properties"][1].properties["water"]:
+                if self.room not in self.water_used_in_rooms:
+                    item_placed_successfully = False
+                    self.water_sprite = Water()
+                    while not item_placed_successfully:
+                        self.water_sprite.center_x = random.randrange(180, SCREEN_WIDTH - 200)
+                        self.water_sprite.center_y = random.randrange(180, SCREEN_HEIGHT - 200)
+
+                        wall_hit_list = arcade.check_for_collision_with_list(self.water_sprite,
+                                                                             sprite_list=self.scene["Walls"])
+                        if len(wall_hit_list) == 0:
+                            item_placed_successfully = True
+                    self.scene.add_sprite("Waters", self.water_sprite)
+                    self.water_list.append(self.water_sprite)
+        except:
+            pass
+
+        # Add question in random place of the room if it defined in that room
+        try:
+            if self.scene["Properties"][1].properties["question"]:
+                if self.room not in self.question_used_in_rooms:
+                    item_placed_successfully = False
+                    self.question_sprite = Question()
+                    while not item_placed_successfully:
+                        self.question_sprite.center_x = random.randrange(180, SCREEN_WIDTH - 200)
+                        self.question_sprite.center_y = random.randrange(180, SCREEN_HEIGHT - 200)
+
+                        wall_hit_list = arcade.check_for_collision_with_list(self.question_sprite,
+                                                                             sprite_list=self.scene["Walls"])
+                        if len(wall_hit_list) == 0:
+                            item_placed_successfully = True
+                    self.scene.add_sprite("Questions", self.question_sprite)
+                    self.question_list.append(self.question_sprite)
+        except:
+            pass
+
+        # Add key in random place of the room only if it wasn't used or taken already
         try:
             for i in range(0, 7):
                 if self.keys[i][0] == self.scene["Properties"][1].properties["key"]:
@@ -213,6 +268,7 @@ class GameView(arcade.View):
 
             self.scene.add_sprite("Enemies", self.enemy_sprite)
 
+    # noinspection PyBroadException
     def on_draw(self):
         arcade.start_render()
 
@@ -282,10 +338,25 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.right_pressed = False
 
+    # noinspection PyBroadException
     def on_update(self, delta_time):
         self.physics_engine.update()
 
         self.bullet_list.update()
+
+        try:
+            self.scene.update_animation(
+                delta_time, ["Waters"]
+            )
+        except:
+            pass
+
+        try:
+            self.scene.update_animation(
+                delta_time, ["Questions"]
+            )
+        except:
+            pass
 
         self.enemy_explosion_list.update()
 
@@ -443,6 +514,29 @@ class GameView(arcade.View):
                 game_view = GameOverView()
                 self.window.show_view(game_view)
             self.setup()
+
+        # Проверка подобрал ли игрок живую воду
+        for water_hit in self.water_list:
+            if arcade.check_for_collision_with_list(self.player_sprite, self.water_list):
+                self.lives += 1
+                arcade.play_sound(self.life_sound)
+                water_hit.remove_from_sprite_lists()
+                # Запись в список использованных бутылочек, чтоб не повторять
+                self.water_used_in_rooms.append(self.room)
+
+        # Проверка подобрал ли игрок вопросик
+        for question_hit in self.question_list:
+            if arcade.check_for_collision_with_list(self.player_sprite, self.question_list):
+                # Определение приза случайным образом
+                if random.choice([True, False]):
+                    self.score += 100
+                    arcade.play_sound(self.question_sound)
+                else:
+                    self.lives += 1
+                    arcade.play_sound(self.life_sound)
+                question_hit.remove_from_sprite_lists()
+                # Запись в список использованных вопросиков, чтоб не повторять
+                self.question_used_in_rooms.append(self.room)
 
         # Проверка подобрал ли игрок ключ
         for key_hit in self.key_list:

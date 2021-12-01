@@ -85,10 +85,28 @@
                         }],
                  "rotation":0,
                  "type":"",
-                 "visible":true,
+                 "visible":false,
                  "width":24,
                  "x":913.333333333333,
                  "y":384
+                }, 
+                {
+                 "gid":3,
+                 "height":24,
+                 "id":5,
+                 "name":"items",
+                 "properties":[
+                        {
+                         "name":"question",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":false,
+                 "width":24,
+                 "x":538.666666666667,
+                 "y":133.333333333333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -97,7 +115,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":5,
+ "nextobjectid":6,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",

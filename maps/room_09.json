@@ -95,14 +95,37 @@
                         {
                          "name":"enemy_types",
                          "type":"string",
-                         "value":"AB"
+                         "value":"ABCD"
                         }],
                  "rotation":0,
                  "type":"",
-                 "visible":true,
+                 "visible":false,
                  "width":24,
                  "x":604,
                  "y":378.666666666667
+                }, 
+                {
+                 "gid":3,
+                 "height":24,
+                 "id":7,
+                 "name":"items",
+                 "properties":[
+                        {
+                         "name":"amount_of_enemy",
+                         "type":"int",
+                         "value":6
+                        }, 
+                        {
+                         "name":"question",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":false,
+                 "width":24,
+                 "x":541.333333333333,
+                 "y":110.666666666667
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -111,7 +134,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":7,
+ "nextobjectid":8,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",
