@@ -320,18 +320,18 @@ class GameView(arcade.View):
     def on_draw(self):
         arcade.start_render()
 
-        # Отрисовка персонажей и комнат
+        # Draw rooms and units
         self.player_list.draw()
         self.scene.draw()
         self.bullet_list.draw()
         self.enemy_explosion_list.draw()
 
-        # Отображение надписей статуса игры
+        # Draw game statuses (room, level, score)
         arcade.draw_text(f"Score: {self.score}", 10, 10, arcade.color.WHITE, 15)
         arcade.draw_text(f"Room: {self.room}", 10, 35, arcade.color.YELLOW, 15)
         arcade.draw_text(f"Level: {self.level}", 10, 65, arcade.color.RED_DEVIL, 15)
 
-        # Отображение собранных ключей
+        # Show keys
         have_number_of_keys = 0
         for i in range(0, 7):
             if self.keys[i][1] == "1":
@@ -340,7 +340,7 @@ class GameView(arcade.View):
                 key_texture_x = KEY_TEXTURE_X + 40 * have_number_of_keys
                 key_texture.draw_scaled(key_texture_x, KEY_TEXTURE_Y, KEY_SCALING)
 
-        # Отображение кол-ва жизней
+        # Show lives
         live_texture = arcade.load_texture(resource_path("images/player/idle.png"))
         if self.lives >= 13:
             lives_to_draw = 12
@@ -420,7 +420,7 @@ class GameView(arcade.View):
         if self.player_sprite.change_y or self.player_sprite.change_x:
             pygame.mixer.Sound.play(self.walk_sound, 0, 1)
 
-        # Передвижение игрока
+        # Moving player
         self.player_sprite.change_x = 0
         self.player_sprite.change_y = 0
         if self.up_pressed and not self.down_pressed:
@@ -436,7 +436,7 @@ class GameView(arcade.View):
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
             self.bullet_direction = "right"
 
-        # Вычисление стрельбы "наискосок"
+        # Shooting
         if self.player_sprite.change_x > 0 and self.player_sprite.change_y > 0:
             self.bullet_direction = "up_right"
 
@@ -508,7 +508,7 @@ class GameView(arcade.View):
                 self.bullet_list.append(bullet)
             self.fire_pressed = False
 
-        # Переход в другую комнату
+        # Moving from room to room
         hit_list = arcade.check_for_collision_with_list(
             sprite=self.player_sprite,
             sprite_list=self.scene["Exits"]
@@ -516,7 +516,7 @@ class GameView(arcade.View):
         for hit in hit_list:
             self.room = hit.properties["to_room"]
 
-            # Соблюдение позиции при переходе между комнатами
+            # Save player position while moving from room to room
             if hit.properties["x"] == 9999:
                 self.player_pos_x = self.player_sprite.center_x
             else:
@@ -563,26 +563,26 @@ class GameView(arcade.View):
                 self.window.show_view(game_view)
             self.setup()
 
-        # Проверка подобрал ли игрок живую воду
+        # Check if we have water
         for water_hit in self.water_list:
             if arcade.check_for_collision_with_list(self.player_sprite, self.water_list):
                 self.lives += 1
                 arcade.play_sound(self.life_sound)
                 water_hit.remove_from_sprite_lists()
-                # Запись в список использованных бутылочек, чтоб не повторять
+                # Store if this water already used
                 self.water_used_in_rooms.append(self.room)
 
-        # Не дать игроку пройти через запертую дверь
+        # Do not allow player to enter into the closed door
         if arcade.check_for_collision_with_list(self.player_sprite, self.door_list):
             if self.player_sprite.center_x < 200:
                 self.player_sprite.center_x += PLAYER_MOVEMENT_SPEED
             else:
                 self.player_sprite.center_x -= PLAYER_MOVEMENT_SPEED
 
-        # Проверка подобрал ли игрок вопросик
+        # Check if we have question
         for question_hit in self.question_list:
             if arcade.check_for_collision_with_list(self.player_sprite, self.question_list):
-                # Определение приза случайным образом
+                # Set random item life/score
                 if random.choice([True, False]):
                     self.score += 100
                     arcade.play_sound(self.question_sound)
@@ -590,10 +590,10 @@ class GameView(arcade.View):
                     self.lives += 1
                     arcade.play_sound(self.life_sound)
                 question_hit.remove_from_sprite_lists()
-                # Запись в список использованных вопросиков, чтоб не повторять
+                # Store if this question already used
                 self.question_used_in_rooms.append(self.room)
 
-        # Проверка подобрал ли игрок ключ
+        # Check if we have key
         for key_hit in self.key_list:
             if arcade.check_for_collision_with_list(self.player_sprite, self.key_list):
                 key_hit.remove_from_sprite_lists()
@@ -603,10 +603,10 @@ class GameView(arcade.View):
                         self.keys[i][1] = "1"
                         return
 
-        # Проверка добрался ли игрок до замочной скважины
+        # Check if we got to the keyhole
         for keyhole_hit in self.keyhole_list:
             if arcade.check_for_collision_with_list(self.player_sprite, self.keyhole_list):
-                # Проверяем есть ли у нас ключик
+                # Check if we have the right key
                 for i in range(0, 7):
                     if self.keys[i][0] == self.scene["Properties"][1].properties["keyhole"]:
                         if self.keys[i][1] == "1":
@@ -617,14 +617,14 @@ class GameView(arcade.View):
                             self.door_list[0].remove_from_sprite_lists()
                             self.rooms_with_open_door.append(self.room)
 
-        # Проверка попала ли пуля куда-нибудь
+        # Check if bullet destroyed something
         for bullet in self.bullet_list:
             hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.scene["Enemies"])
 
             if len(hit_list) > 0:
                 bullet.remove_from_sprite_lists()
 
-            # Если попали в противника - удалить противника, удалить пулю, начислить очки
+            # If we destroyed the enemy - remove the bullet, remove destroyed enemy, add score
             for enemy in hit_list:
                 enemy.remove_from_sprite_lists()
                 self.score += 5
@@ -636,12 +636,12 @@ class GameView(arcade.View):
                 explosion.update()
                 self.enemy_explosion_list.append(explosion)
 
-            # Удалить выстрелы попавшие в стены
+            # Remove shoots into wall
             hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.scene["Walls"])
             if len(hit_list) > 0:
                 bullet.remove_from_sprite_lists()
 
-            # Удалить все выстрелы вылетевшие за пределы игрового поля
+            # Remove shoots that get out of the game field
             if bullet.center_x < 0 or bullet.center_x > SCREEN_WIDTH or \
                     bullet.center_y < 0 or bullet.center_y > SCREEN_HEIGHT:
                 bullet.remove_from_sprite_lists()

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Global game constants
 """
@@ -23,26 +21,26 @@ PLAYER_MOVEMENT_SPEED = 3
 # Enemy
 ENEMY_ANIMATION_SPEED = 4
 
-# Первичные координаты изображения кол-ва жизней
+# Lives coordinates
 LIVE_TEXTURE_X = 1081
 LIVE_TEXTURE_Y = 690
 
-# Первичные координаты изображения подобранных ключей
+# Keys coordinates
 KEY_TEXTURE_X = 1065
 KEY_TEXTURE_Y = 22
 KEY_SCALING = 0.3
 
 KEYHOLE_SCALING = 1.2
 
-# Живая вода
+# Live water
 WATER_SCALING = 0.2
 WATER_ANIMATION_SPEED = 8
 
-# Скорость пули и настройки выстрелов
+# Bullet speed and shoots
 BULLET_SPEED = 5
 BULLET_SCALING = 0.5
 ONE_TIME_MAX_BULLETS = 2
 
-# Вопрос
+# Question
 QUESTION_SCALING = 1.4
 QUESTION_ANIMATION_SPEED = 9
