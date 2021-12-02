@@ -112,13 +112,13 @@
                  "properties":[
                         {
                          "name":"amount_of_enemy",
-                         "type":"string",
-                         "value":"6"
+                         "type":"int",
+                         "value":6
                         }, 
                         {
                          "name":"key",
                          "type":"string",
-                         "value":"orange"
+                         "value":"gold"
                         }],
                  "rotation":0,
                  "type":"",

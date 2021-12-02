@@ -20,9 +20,9 @@ class Question(arcade.Sprite):
         self.hit_box = self.texture.hit_box_points
 
     def update_animation(self, delta_time):
-        # Water animation
+        # Question animation
         self.update_interval += 1
-        if self.update_interval > 9:
+        if self.update_interval > QUESTION_ANIMATION_SPEED:
             self.update_interval = 0
             self.cur_texture += 1
             if self.cur_texture > 2:

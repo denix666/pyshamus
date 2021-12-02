@@ -18,6 +18,9 @@ PLAYER_INIT_Y = 390
 # Movement speed of player, in pixels per frame (3)
 PLAYER_MOVEMENT_SPEED = 3
 
+# Enemy
+ENEMY_ANIMATION_SPEED = 4
+
 # Первичные координаты изображения кол-ва жизней
 LIVE_TEXTURE_X = 1081
 LIVE_TEXTURE_Y = 690
@@ -27,8 +30,11 @@ KEY_TEXTURE_X = 1065
 KEY_TEXTURE_Y = 22
 KEY_SCALING = 0.3
 
+KEYHOLE_SCALING = 1.2
+
 # Живая вода
 WATER_SCALING = 0.2
+WATER_ANIMATION_SPEED = 8
 
 # Скорость пули и настройки выстрелов
 BULLET_SPEED = 5
@@ -37,3 +43,4 @@ ONE_TIME_MAX_BULLETS = 2
 
 # Вопрос
 QUESTION_SCALING = 1.4
+QUESTION_ANIMATION_SPEED = 9

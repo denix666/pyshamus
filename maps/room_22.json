@@ -67,14 +67,42 @@
                         {
                          "name":"enemy_types",
                          "type":"string",
-                         "value":"AB"
+                         "value":"ABCD"
                         }],
                  "rotation":0,
                  "type":"",
-                 "visible":true,
+                 "visible":false,
                  "width":24,
                  "x":913.333333333333,
                  "y":384
+                }, 
+                {
+                 "gid":3,
+                 "height":24,
+                 "id":7,
+                 "name":"items",
+                 "properties":[
+                        {
+                         "name":"amount_of_enemy",
+                         "type":"int",
+                         "value":8
+                        }, 
+                        {
+                         "name":"question",
+                         "type":"bool",
+                         "value":true
+                        }, 
+                        {
+                         "name":"water",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":false,
+                 "width":24,
+                 "x":788,
+                 "y":216
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -83,7 +111,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":7,
+ "nextobjectid":8,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",

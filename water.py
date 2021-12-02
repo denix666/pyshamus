@@ -22,7 +22,7 @@ class Water(arcade.Sprite):
     def update_animation(self, delta_time):
         # Water animation
         self.update_interval += 1
-        if self.update_interval > 8:
+        if self.update_interval > WATER_ANIMATION_SPEED:
             self.update_interval = 0
             self.cur_texture += 1
             if self.cur_texture > 2:

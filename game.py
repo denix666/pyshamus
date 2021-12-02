@@ -3,7 +3,7 @@ import time
 import arcade.color
 import pygame
 from game_player import *
-from key import *
+from key_and_holes import *
 from enemy import Enemy
 from water import Water
 from question import Question
@@ -94,9 +94,13 @@ class GameView(arcade.View):
         self.bullet_list = None
         self.key_list = None
         self.key_sprite = None
+        self.door_list = None
+        self.door_sprite = None
+        self.keyhole_list = None
+        self.keyhole_sprite = None
         self.room = "00"
         self.score = 0
-        self.lives = 5
+        self.lives = 3
         self.level = 1
         self.tile_map = None
         self.scene = None
@@ -113,13 +117,15 @@ class GameView(arcade.View):
 
         self.water_used_in_rooms = []
         self.question_used_in_rooms = []
+        self.keyholes_used_in_rooms = []
+        self.rooms_with_open_door = []
 
         # Keys info array
         # 0 - Don't have a key
         # 1 - Have a key
         # 2 - A key was already used
         self.keys = array([["blue", "0"],
-                           ['orange', "0"],
+                           ['gold', "0"],
                            ['red', "0"],
                            ['purple', "0"],
                            ['green', "0"],
@@ -166,6 +172,12 @@ class GameView(arcade.View):
         # Init key list
         self.key_list = arcade.SpriteList()
 
+        # Init keyhole list
+        self.keyhole_list = arcade.SpriteList()
+
+        # Init door list
+        self.door_list = arcade.SpriteList()
+
         # Init water list
         self.water_list = arcade.SpriteList()
 
@@ -177,6 +189,18 @@ class GameView(arcade.View):
             self.player_sprite,
             walls=self.scene["Walls"]
         )
+
+        # Add doors to rooms
+        if self.room not in self.rooms_with_open_door:
+            try:
+                if self.scene["Properties"][1].properties["keyhole"]:
+                    self.door_sprite = Door()
+                    self.door_sprite.center_x = self.scene["Properties"][1].properties["door_x"]
+                    self.door_sprite.center_y = self.scene["Properties"][1].properties["door_y"]
+                    self.scene.add_sprite("Doors", self.door_sprite)
+                    self.door_list.append(self.door_sprite)
+            except:
+                pass
 
         # Add water with life in random place of the room if it defined in that room
         try:
@@ -194,6 +218,26 @@ class GameView(arcade.View):
                             item_placed_successfully = True
                     self.scene.add_sprite("Waters", self.water_sprite)
                     self.water_list.append(self.water_sprite)
+        except:
+            pass
+
+        # Add keyholes to the rooms
+        try:
+            if self.scene["Properties"][1].properties["keyhole"]:
+                if self.room not in self.keyholes_used_in_rooms:
+                    keyhole_type = self.scene["Properties"][1].properties["keyhole"]
+                    item_placed_successfully = False
+                    self.keyhole_sprite = KeyHole(keyhole_type)
+                    while not item_placed_successfully:
+                        self.keyhole_sprite.center_x = random.randrange(180, SCREEN_WIDTH - 200)
+                        self.keyhole_sprite.center_y = random.randrange(180, SCREEN_HEIGHT - 200)
+
+                        wall_hit_list = arcade.check_for_collision_with_list(self.keyhole_sprite,
+                                                                             sprite_list=self.scene["Walls"])
+                        if len(wall_hit_list) == 0:
+                            item_placed_successfully = True
+                    self.scene.add_sprite("KeyHoles", self.keyhole_sprite)
+                    self.keyhole_list.append(self.keyhole_sprite)
         except:
             pass
 
@@ -524,6 +568,13 @@ class GameView(arcade.View):
                 # Запись в список использованных бутылочек, чтоб не повторять
                 self.water_used_in_rooms.append(self.room)
 
+        # Не дать игроку пройти через запертую дверь
+        if arcade.check_for_collision_with_list(self.player_sprite, self.door_list):
+            if self.player_sprite.center_x < 200:
+                self.player_sprite.center_x += PLAYER_MOVEMENT_SPEED
+            else:
+                self.player_sprite.center_x -= PLAYER_MOVEMENT_SPEED
+
         # Проверка подобрал ли игрок вопросик
         for question_hit in self.question_list:
             if arcade.check_for_collision_with_list(self.player_sprite, self.question_list):
@@ -547,6 +598,20 @@ class GameView(arcade.View):
                     if self.keys[i][0] == self.scene["Properties"][1].properties["key"]:
                         self.keys[i][1] = "1"
                         return
+
+        # Проверка добрался ли игрок до замочной скважины
+        for keyhole_hit in self.keyhole_list:
+            if arcade.check_for_collision_with_list(self.player_sprite, self.keyhole_list):
+                # Проверяем есть ли у нас ключик
+                for i in range(0, 7):
+                    if self.keys[i][0] == self.scene["Properties"][1].properties["keyhole"]:
+                        if self.keys[i][1] == "1":
+                            keyhole_hit.remove_from_sprite_lists()
+                            self.keys[i][1] = "2"
+                            self.keyholes_used_in_rooms.append(self.room)
+                            # TODO add door open animation
+                            self.door_list[0].remove_from_sprite_lists()
+                            self.rooms_with_open_door.append(self.room)
 
         # Проверка попала ли пуля куда-нибудь
         for bullet in self.bullet_list:

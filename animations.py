@@ -15,7 +15,7 @@ class EnemyExplosion(arcade.Sprite):
 
         # Load textures for enemy
         self.enemy_animation_textures = []
-        for i in range(3):
+        for i in range(4):
             texture = arcade.load_texture(resource_path("images/animations/enemy_%s.png" % i))
             self.enemy_animation_textures.append(texture)
 
