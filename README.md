@@ -7,3 +7,13 @@ The screenshot of the original game:
 Rooms and levels map:
 
 ![img](docs/levels_map.png?raw=true "Screenshot")
+
+# How to run:
+
+1 - install required modules
+
+    pip install numpy pygame arcade
+
+2 - run the game:
+
+    python main.py
