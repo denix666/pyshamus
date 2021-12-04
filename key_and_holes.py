@@ -38,7 +38,7 @@ class Door(arcade.Sprite):
 
         # Load texture
         self.door_textures = []
-        texture = arcade.load_texture(resource_path("images/doors/door_0.png"))
+        texture = arcade.load_texture(resource_path("images/doors/level_0/door_0.png"))
         self.door_textures.append(texture)
         self.texture = self.door_textures[0]
         self.hit_box = self.texture.hit_box_points

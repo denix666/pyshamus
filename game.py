@@ -87,6 +87,8 @@ class GameView(arcade.View):
         self.walk_sound = pygame.mixer.Sound(resource_path("sounds/walk.wav"))
         self.key_sound = arcade.load_sound(resource_path("sounds/key.wav"))
         self.life_sound = arcade.load_sound(resource_path("sounds/life.wav"))
+        self.game_over_sound = arcade.load_sound(resource_path("sounds/game_over.wav"))
+        self.opening_door_sound = arcade.load_sound(resource_path("sounds/opening_door.wav"))
         self.question_sound = arcade.load_sound(resource_path("sounds/question.wav"))
         self.enemy_destroyed = arcade.load_sound(resource_path("sounds/enemy_destroyed.wav"))
 
@@ -123,6 +125,9 @@ class GameView(arcade.View):
         self.question_used_in_rooms = []
         self.keyholes_used_in_rooms = []
         self.rooms_with_open_door = []
+
+        self.opening_door_list = None
+        self.opening_door_sprite = None
 
         # Keys info array
         # 0 - Don't have a key
@@ -170,6 +175,10 @@ class GameView(arcade.View):
         self.enemy_explosion_list = arcade.SpriteList()
         self.enemy_explosion_sprite = EnemyExplosion()
 
+        # Opening door animation
+        self.opening_door_list = arcade.SpriteList()
+        self.opening_door_sprite = DoorOpenAnimation()
+
         # Init bullets list
         self.bullet_list = arcade.SpriteList()
 
@@ -193,6 +202,12 @@ class GameView(arcade.View):
             self.player_sprite,
             walls=self.scene["Walls"]
         )
+
+        # Set level
+        try:
+            self.level = self.scene["Properties"][1].properties["level"]
+        except:
+            pass
 
         # Add doors to rooms
         if self.room not in self.rooms_with_open_door:
@@ -325,6 +340,7 @@ class GameView(arcade.View):
         self.scene.draw()
         self.bullet_list.draw()
         self.enemy_explosion_list.draw()
+        self.opening_door_list.draw()
 
         # Draw game statuses (room, level, score)
         arcade.draw_text(f"Score: {self.score}", 10, 10, arcade.color.WHITE, 15)
@@ -407,6 +423,8 @@ class GameView(arcade.View):
             pass
 
         self.enemy_explosion_list.update()
+
+        self.opening_door_list.update()
 
         self.scene.update_animation(
             delta_time, ["Player"]
@@ -559,6 +577,7 @@ class GameView(arcade.View):
             arcade.play_sound(self.die_sound)
             time.sleep(1)
             if self.lives < 1:
+                arcade.play_sound(self.game_over_sound)
                 game_view = GameOverView()
                 self.window.show_view(game_view)
             self.setup()
@@ -610,12 +629,18 @@ class GameView(arcade.View):
                 for i in range(0, 7):
                     if self.keys[i][0] == self.scene["Properties"][1].properties["keyhole"]:
                         if self.keys[i][1] == "1":
+                            # Open door animation, sound and removing unneeded sprites
                             keyhole_hit.remove_from_sprite_lists()
                             self.keys[i][1] = "2"
                             self.keyholes_used_in_rooms.append(self.room)
-                            # TODO add door open animation
+                            arcade.play_sound(self.opening_door_sound)
                             self.door_list[0].remove_from_sprite_lists()
                             self.rooms_with_open_door.append(self.room)
+                            opening_door = DoorOpenAnimation()
+                            opening_door.center_y = self.scene["Properties"][1].properties["door_y"]
+                            opening_door.center_x = self.scene["Properties"][1].properties["door_x"]
+                            opening_door.update()
+                            self.opening_door_list.append(opening_door)
 
         # Check if bullet destroyed something
         for bullet in self.bullet_list:
