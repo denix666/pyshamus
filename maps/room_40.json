@@ -118,7 +118,7 @@
                         {
                          "name":"door_x",
                          "type":"int",
-                         "value":1200
+                         "value":1176
                         }, 
                         {
                          "name":"door_y",

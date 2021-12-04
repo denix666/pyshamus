@@ -33,10 +33,10 @@ class EnemyExplosion(arcade.Sprite):
 
 
 class DoorOpenAnimation(arcade.Sprite):
-    def __init__(self):
+    def __init__(self, level):
         super().__init__()
 
-        self.scale = 2
+        self.scale = 1
         self.cur_texture = 0
         self.update_interval = 0
 
@@ -45,19 +45,19 @@ class DoorOpenAnimation(arcade.Sprite):
 
         # Load textures for enemy
         self.door_animation_textures = []
-        for i in range(19):
-            texture = arcade.load_texture(resource_path("images/doors/level_0/door_%s.png" % i))
+        for i in range(37):
+            texture = arcade.load_texture(resource_path("images/doors/level_%s/door_%s.png" % (level, i)))
             self.door_animation_textures.append(texture)
 
         self.texture = self.door_animation_textures[0]
 
     def update(self):
         self.update_interval += 1
-        if self.update_interval > 3:
+        if self.update_interval > 1:
             self.update_interval = 0
             self.cur_texture += 1
-            if self.cur_texture > 18:
+            if self.cur_texture > 36:
                 self.remove_from_sprite_lists()
                 return
             self.texture = self.door_animation_textures[self.cur_texture]
-            self.center_y += 4  # How many pixels less every slide too keep it on top
+            self.center_y += 2  # How many pixels less every slide too keep it on top

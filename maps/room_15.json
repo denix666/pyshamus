@@ -124,7 +124,7 @@
                         {
                          "name":"door_x",
                          "type":"int",
-                         "value":0
+                         "value":24
                         }, 
                         {
                          "name":"door_y",

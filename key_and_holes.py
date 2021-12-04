@@ -31,14 +31,14 @@ class KeyHole(arcade.Sprite):
 
 
 class Door(arcade.Sprite):
-    def __init__(self):
+    def __init__(self, level):
         super().__init__()
 
-        self.scale = 2
+        self.scale = 1
 
         # Load texture
         self.door_textures = []
-        texture = arcade.load_texture(resource_path("images/doors/level_0/door_0.png"))
+        texture = arcade.load_texture(resource_path("images/doors/level_%s/door_0.png" % level))
         self.door_textures.append(texture)
         self.texture = self.door_textures[0]
         self.hit_box = self.texture.hit_box_points

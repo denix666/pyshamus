@@ -175,7 +175,7 @@ class GameView(arcade.View):
 
         # Opening door animation
         self.opening_door_list = arcade.SpriteList()
-        self.opening_door_sprite = DoorOpenAnimation()
+        self.opening_door_sprite = DoorOpenAnimation(self.level)
 
         # Init bullets list
         self.bullet_list = arcade.SpriteList()
@@ -211,7 +211,7 @@ class GameView(arcade.View):
         if self.room not in self.rooms_with_open_door:
             try:
                 if self.scene["Properties"][1].properties["keyhole"]:
-                    self.door_sprite = Door()
+                    self.door_sprite = Door(self.level)
                     self.door_sprite.center_x = self.scene["Properties"][1].properties["door_x"]
                     self.door_sprite.center_y = self.scene["Properties"][1].properties["door_y"]
                     self.scene.add_sprite("Doors", self.door_sprite)
@@ -600,7 +600,7 @@ class GameView(arcade.View):
             if arcade.check_for_collision_with_list(self.player_sprite, self.question_list):
                 # Set random item life/score
                 if random.choice([True, False]):
-                    self.score += 100
+                    self.score += 50
                     arcade.play_sound(self.question_sound)
                 else:
                     self.lives += 1
@@ -633,7 +633,7 @@ class GameView(arcade.View):
                             arcade.play_sound(self.opening_door_sound)
                             self.door_list[0].remove_from_sprite_lists()
                             self.rooms_with_open_door.append(self.room)
-                            opening_door = DoorOpenAnimation()
+                            opening_door = DoorOpenAnimation(self.level)
                             opening_door.center_y = self.scene["Properties"][1].properties["door_y"]
                             opening_door.center_x = self.scene["Properties"][1].properties["door_x"]
                             opening_door.update()
@@ -649,7 +649,7 @@ class GameView(arcade.View):
             # If we destroyed the enemy - remove the bullet, remove destroyed enemy, add score
             for enemy in hit_list:
                 enemy.remove_from_sprite_lists()
-                self.score += 5
+                self.score += 3
                 arcade.sound.play_sound(self.enemy_destroyed)
 
                 explosion = EnemyExplosion()
