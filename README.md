@@ -12,7 +12,7 @@ Rooms and levels map:
 
 1 - install required modules
 
-    pip install numpy pygame arcade
+    pip install pygame arcade
 
 2 - run the game:
 

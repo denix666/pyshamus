@@ -12,7 +12,6 @@ from enemy import Enemy
 from water import Water
 from question import Question
 from animations import *
-from numpy import array
 
 
 class IntroView(arcade.View):
@@ -129,18 +128,17 @@ class GameView(arcade.View):
         self.opening_door_list = None
         self.opening_door_sprite = None
 
-        # Keys info array
+        # Keys info array (dictionary)
         # 0 - Don't have a key
         # 1 - Have a key
         # 2 - A key was already used
-        self.keys = array([["blue", "0"],
-                           ['gold', "0"],
-                           ['red', "0"],
-                           ['purple', "0"],
-                           ['green', "0"],
-                           ['cyan', "0"],
-                           ['brown', "0"]
-                           ])
+        self.keys = {"blue": "0",
+                     "gold": "0",
+                     "red": "0",
+                     "purple": "0",
+                     "green": "0",
+                     "cyan": "0",
+                     "brown": "0"}
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -281,12 +279,11 @@ class GameView(arcade.View):
 
         # Add key in random place of the room only if it wasn't used or taken already
         try:
-            for i in range(0, 7):
-                if self.keys[i][0] == self.scene["Properties"][1].properties["key"]:
-                    if self.keys[i][1] == "0":
-                        key_type = self.scene["Properties"][1].properties["key"]
+            for key_color, key_state in self.keys.items():
+                if key_color == self.scene["Properties"][1].properties["key"]:
+                    if key_state == "0":
                         item_placed_successfully = False
-                        self.key_sprite = Key(key_type)
+                        self.key_sprite = Key(key_color)
                         while not item_placed_successfully:
                             self.key_sprite.center_x = random.randrange(180, SCREEN_WIDTH - 200)
                             self.key_sprite.center_y = random.randrange(180, SCREEN_HEIGHT - 200)
@@ -349,10 +346,10 @@ class GameView(arcade.View):
 
         # Show keys
         have_number_of_keys = 0
-        for i in range(0, 7):
-            if self.keys[i][1] == "1":
+        for key_color, key_state in self.keys.items():
+            if key_state == "1":
                 have_number_of_keys += 1
-                key_texture = arcade.load_texture(resource_path("images/keys/%s.png" % self.keys[i][0]))
+                key_texture = arcade.load_texture(resource_path("images/keys/%s.png" % key_color))
                 key_texture_x = KEY_TEXTURE_X + 40 * have_number_of_keys
                 key_texture.draw_scaled(key_texture_x, KEY_TEXTURE_Y, KEY_SCALING)
 
@@ -617,21 +614,21 @@ class GameView(arcade.View):
             if arcade.check_for_collision_with_list(self.player_sprite, self.key_list):
                 key_hit.remove_from_sprite_lists()
                 arcade.play_sound(self.key_sound)
-                for i in range(0, 7):
-                    if self.keys[i][0] == self.scene["Properties"][1].properties["key"]:
-                        self.keys[i][1] = "1"
+                for key_color, key_state in self.keys.items():
+                    if key_color == self.scene["Properties"][1].properties["key"]:
+                        self.keys[key_color] = "1"
                         return
 
         # Check if we got to the keyhole
         for keyhole_hit in self.keyhole_list:
             if arcade.check_for_collision_with_list(self.player_sprite, self.keyhole_list):
                 # Check if we have the right key
-                for i in range(0, 7):
-                    if self.keys[i][0] == self.scene["Properties"][1].properties["keyhole"]:
-                        if self.keys[i][1] == "1":
+                for key_color, key_state in self.keys.items():
+                    if key_color == self.scene["Properties"][1].properties["keyhole"]:
+                        if key_state == "1":
                             # Open door animation, sound and removing unneeded sprites
                             keyhole_hit.remove_from_sprite_lists()
-                            self.keys[i][1] = "2"
+                            self.keys[key_color] = "2"
                             self.keyholes_used_in_rooms.append(self.room)
                             arcade.play_sound(self.opening_door_sound)
                             self.door_list[0].remove_from_sprite_lists()
