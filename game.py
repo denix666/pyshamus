@@ -12,18 +12,57 @@ from enemy import Enemy
 from water import Water
 from question import Question
 from animations import *
+from shadow import Shadow
 
 
 class IntroView(arcade.View):
     def __init__(self):
         super().__init__()
+
+        # Arcade mixer isn't very usable, so using mixer from pygame
         pygame.mixer.init()
         self.intro_music = pygame.mixer.Sound(resource_path("sounds/intro.mp3"))
         self.intro_music.set_volume(0.6)
 
+        # Vars for animated items
+        self.question_sprite = None
+        self.water_sprite = None
+        self.enemy_sprite_b = None
+        self.enemy_sprite_c = None
+        self.enemy_sprite_d = None
+
+        # Load font for intro
+        arcade.load_font(resource_path("fonts/arc.ttf"))
+
     def on_show(self):
         arcade.set_background_color(arcade.color.BLACK)
         pygame.mixer.Sound.play(self.intro_music, -1)
+
+        # Load animated items for intro
+        self.question_sprite = Question()
+        self.question_sprite.center_x = 125
+        self.question_sprite.center_y = 575
+        self.question_sprite.scale = 2
+
+        self.water_sprite = Water()
+        self.water_sprite.center_x = 125
+        self.water_sprite.center_y = 525
+        self.water_sprite.scale = 0.3
+
+        self.enemy_sprite_b = Enemy("B")
+        self.enemy_sprite_b.center_x = 660
+        self.enemy_sprite_b.center_y = 580
+        self.enemy_sprite_b.scale = 1.6
+
+        self.enemy_sprite_c = Enemy("C")
+        self.enemy_sprite_c.center_x = 660
+        self.enemy_sprite_c.center_y = 520
+        self.enemy_sprite_c.scale = 1.6
+
+        self.enemy_sprite_d = Enemy("D")
+        self.enemy_sprite_d.center_x = 660
+        self.enemy_sprite_d.center_y = 690
+        self.enemy_sprite_d.scale = 1.6
 
     def on_draw(self):
         arcade.start_render()
@@ -31,13 +70,29 @@ class IntroView(arcade.View):
         arcade.draw_texture_rectangle(intro_texture.width // 2,
                                       intro_texture.height // 2, SCREEN_WIDTH, SCREEN_HEIGHT, intro_texture)
 
+        # Show animated items
+        self.question_sprite.draw()
+        self.question_sprite.update_animation(self)
+
+        self.water_sprite.draw()
+        self.water_sprite.update_animation(self)
+
+        self.enemy_sprite_b.draw()
+        self.enemy_sprite_b.update_animation(self)
+
+        self.enemy_sprite_c.draw()
+        self.enemy_sprite_c.update_animation(self)
+
+        self.enemy_sprite_d.draw()
+        self.enemy_sprite_d.update_animation(self)
+
         # Show intro and instructions for game
         arcade.draw_text("SPACE - Shoot", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
-                         arcade.color.YELLOW, font_size=30, anchor_x="center")
+                         arcade.color.YELLOW, font_size=33, anchor_x="center", font_name="arc")
         arcade.draw_text("Up, Down, Left, Right - walk", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 210,
-                         arcade.color.YELLOW, font_size=30, anchor_x="center")
-        arcade.draw_text("Hit SPACE to start game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 300,
-                         arcade.color.YELLOW, font_size=30, anchor_x="center")
+                         arcade.color.YELLOW, font_size=33, anchor_x="center", font_name="arc")
+        arcade.draw_text("Hit  SPACE  to  start  game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 300,
+                         arcade.color.YELLOW, font_size=50, anchor_x="center", font_name="arc")
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.SPACE or key == arcade.key.ESCAPE:
@@ -48,14 +103,8 @@ class IntroView(arcade.View):
 
 
 class GameOverView(arcade.View):
-    def on_show(self):
-        arcade.set_background_color(arcade.color.BLACK)
-
     def on_draw(self):
         arcade.start_render()
-        intro_texture = arcade.load_texture(resource_path("images/intro.png"))
-        arcade.draw_texture_rectangle(intro_texture.width // 2,
-                                      intro_texture.height // 2, SCREEN_WIDTH, SCREEN_HEIGHT, intro_texture)
         arcade.draw_text("Game over!", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
                          arcade.color.YELLOW, font_size=30, anchor_x="center")
         arcade.draw_text("Hit SPACE to start new game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 250,
@@ -71,6 +120,25 @@ class GameOverView(arcade.View):
             game_view.setup()
             self.window.show_view(game_view)
 
+
+class PauseView(arcade.View):
+    def __init__(self, game_view):
+        super().__init__()
+
+        self.game_view = game_view
+        arcade.load_font(resource_path("fonts/arc.ttf"))
+
+    def on_draw(self):
+        arcade.draw_rectangle_filled(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50, 420, 70, arcade.color.BLACK)
+        arcade.draw_text("Game  paused", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50,
+                         arcade.color.GREEN, font_size=35, anchor_x="center", font_name="arc")
+
+        arcade.draw_text("Press  any  key  to  continue", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 20,
+                         arcade.color.GREEN, font_size=25, anchor_x="center", font_name="arc")
+
+    def on_key_press(self, key, _modifiers):
+        self.window.show_view(self.game_view)
+
 ###########################################################################
 # Game code ###############################################################
 ###########################################################################
@@ -84,12 +152,14 @@ class GameView(arcade.View):
         arcade.set_background_color(arcade.csscolor.BLACK)
         self.die_sound = arcade.load_sound(resource_path("sounds/die.wav"))
         self.walk_sound = pygame.mixer.Sound(resource_path("sounds/walk.wav"))
+        self.shadow_sound = pygame.mixer.Sound(resource_path("sounds/shadow.wav"))
         self.key_sound = arcade.load_sound(resource_path("sounds/key.wav"))
         self.life_sound = arcade.load_sound(resource_path("sounds/life.wav"))
         self.game_over_sound = arcade.load_sound(resource_path("sounds/game_over.wav"))
         self.opening_door_sound = arcade.load_sound(resource_path("sounds/opening_door.wav"))
         self.question_sound = arcade.load_sound(resource_path("sounds/question.wav"))
-        self.enemy_destroyed = arcade.load_sound(resource_path("sounds/enemy_destroyed.wav"))
+        self.enemy_destroyed_sound = arcade.load_sound(resource_path("sounds/enemy_destroyed.wav"))
+        self.time_up_sound = arcade.load_sound(resource_path("sounds/time_up.wav"))
 
         self.player_list = None
         self.player_sprite = None
@@ -120,6 +190,11 @@ class GameView(arcade.View):
         self.question_sprite = None
         self.question_list = None
 
+        self.shadow_sprite = None
+        self.shadow_list = None
+        self.shadow_freeze_time = None
+        self.shadow_freeze = None
+
         self.water_used_in_rooms = []
         self.question_used_in_rooms = []
         self.keyholes_used_in_rooms = []
@@ -127,6 +202,8 @@ class GameView(arcade.View):
 
         self.opening_door_list = None
         self.opening_door_sprite = None
+
+        self.time_in_room = None
 
         # Keys info array (dictionary)
         # 0 - Don't have a key
@@ -149,6 +226,15 @@ class GameView(arcade.View):
 
     # noinspection PyBroadException
     def setup(self):
+        # Set timer for "how match player in the room" to 0
+        self.time_in_room = 0
+        self.shadow_freeze = False
+        self.shadow_freeze_time = 0
+        pygame.mixer.Sound.stop(self.shadow_sound)
+
+        # Set black background
+        arcade.set_background_color(arcade.color.BLACK)
+
         # Load tile map
         layer_options = {
             "Walls": {
@@ -172,6 +258,10 @@ class GameView(arcade.View):
         # Enemy explosion animation
         self.enemy_explosion_list = arcade.SpriteList()
         self.enemy_explosion_sprite = EnemyExplosion()
+
+        # Shadow
+        self.shadow_list = arcade.SpriteList()
+        self.shadow_sprite = Shadow()
 
         # Opening door animation
         self.opening_door_list = arcade.SpriteList()
@@ -389,6 +479,10 @@ class GameView(arcade.View):
         if key == arcade.key.SPACE:
             self.fire_pressed = True
 
+        if key == arcade.key.ESCAPE:
+            pause = PauseView(self)
+            self.window.show_view(pause)
+
     def on_key_release(self, key, modifiers):
         if key == arcade.key.UP:
             self.up_pressed = False
@@ -402,6 +496,28 @@ class GameView(arcade.View):
     # noinspection PyBroadException
     def on_update(self, delta_time):
         self.physics_engine.update()
+
+        # Check how many time player in the room, and play sound if it more than MAX_TIME_IN_THE_ROOM seconds
+        self.time_in_room += delta_time
+        if int(self.time_in_room) % 60 == MAX_TIME_IN_THE_ROOM - self.level:
+            self.time_in_room += 1
+            # Set background to other color for 1 second
+            arcade.set_background_color(arcade.color.BLACK_OLIVE)
+            # Play the warning sound
+            arcade.play_sound(self.time_up_sound)
+
+        # Set background back to black
+        if int(self.time_in_room) % 60 > MAX_TIME_IN_THE_ROOM - self.level + 1.2:
+            arcade.set_background_color(arcade.color.BLACK)
+
+        if int(self.time_in_room) % 60 == MAX_TIME_IN_THE_ROOM - self.level + 5:
+            self.time_in_room += 1
+            if len(self.shadow_list) < 1:
+                self.shadow_sprite.center_x = random.randrange(SCREEN_WIDTH)
+                self.shadow_sprite.center_y = SCREEN_HEIGHT
+                self.scene.add_sprite("Shadow", self.shadow_sprite)
+                self.shadow_list.append(self.shadow_sprite)
+                pygame.mixer.Sound.play(self.shadow_sound, -1)
 
         self.bullet_list.update()
 
@@ -430,6 +546,14 @@ class GameView(arcade.View):
         self.scene.update_animation(
             delta_time, ["Enemies"]
         )
+
+        try:
+            if not self.shadow_freeze:
+                self.scene.update_animation(
+                    delta_time, ["Shadow"]
+                )
+        except:
+            pass
 
         # TODO Проигрывание звука шагов при передвижении (improve sound effect)
         if self.player_sprite.change_y or self.player_sprite.change_x:
@@ -544,6 +668,24 @@ class GameView(arcade.View):
 
             self.setup()
 
+        # Manage shadow object
+        for shad in self.shadow_list:
+            if not self.shadow_freeze:
+                if shad.center_x < self.player_sprite.center_x:
+                    shad.center_x += 2
+                else:
+                    shad.center_x -= 2
+
+                if shad.center_y < self.player_sprite.center_y:
+                    shad.center_y += 2
+                else:
+                    shad.center_y -= 2
+            else:
+                self.shadow_freeze_time += delta_time
+                if int(self.shadow_freeze_time) % 60 > 1:
+                    self.shadow_freeze = False
+                    pygame.mixer.Sound.play(self.shadow_sound, -1)
+
         # Manage enemies objects - do not allow get out of the walls and follow the player
         for en in self.scene["Enemies"]:
             if en.center_y < self.player_sprite.center_y:
@@ -569,8 +711,10 @@ class GameView(arcade.View):
                     en.center_x += 1
 
         # Check if player collided with enemy
-        if arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.scene["Enemies"]):
+        if arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.scene["Enemies"]) or \
+                arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.shadow_list):
             self.lives -= 1
+            pygame.mixer.Sound.stop(self.shadow_sound)
             arcade.play_sound(self.die_sound)
             time.sleep(1)
             if self.lives < 1:
@@ -650,7 +794,7 @@ class GameView(arcade.View):
             for enemy in hit_list:
                 enemy.remove_from_sprite_lists()
                 self.score += 3
-                arcade.sound.play_sound(self.enemy_destroyed)
+                arcade.sound.play_sound(self.enemy_destroyed_sound)
 
                 explosion = EnemyExplosion()
                 explosion.center_y = hit_list[0].center_y
@@ -662,6 +806,14 @@ class GameView(arcade.View):
             hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.scene["Walls"])
             if len(hit_list) > 0:
                 bullet.remove_from_sprite_lists()
+
+            # Check if we hit into shadow
+            hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.shadow_list)
+            if len(hit_list) > 0:
+                bullet.remove_from_sprite_lists()
+                self.shadow_freeze = True
+                self.shadow_freeze_time = 0
+                pygame.mixer.Sound.stop(self.shadow_sound)
 
             # Remove shoots that get out of the game field
             if bullet.center_x < 0 or bullet.center_x > SCREEN_WIDTH or \

@@ -44,3 +44,8 @@ ONE_TIME_MAX_BULLETS = 2
 # Question
 QUESTION_SCALING = 1.4
 QUESTION_ANIMATION_SPEED = 9
+
+# How match time player can be in the room before the shadow get in
+MAX_TIME_IN_THE_ROOM = 12
+SHADOW_ANIMATION_SPEED = 5
+SHADOW_SCALING = 2
