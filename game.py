@@ -30,6 +30,7 @@ class IntroView(arcade.View):
         self.enemy_sprite_b = None
         self.enemy_sprite_c = None
         self.enemy_sprite_d = None
+        self.enemy_sprite_shadow = None
 
         # Load font for intro
         arcade.load_font(resource_path("fonts/arc.ttf"))
@@ -64,6 +65,11 @@ class IntroView(arcade.View):
         self.enemy_sprite_d.center_y = 690
         self.enemy_sprite_d.scale = 1.6
 
+        self.enemy_sprite_shadow = Shadow()
+        self.enemy_sprite_shadow.center_x = 660
+        self.enemy_sprite_shadow.center_y = 635
+        self.enemy_sprite_shadow.scale = 1.6
+
     def on_draw(self):
         arcade.start_render()
         intro_texture = arcade.load_texture(resource_path("images/intro.png"))
@@ -86,6 +92,9 @@ class IntroView(arcade.View):
         self.enemy_sprite_d.draw()
         self.enemy_sprite_d.update_animation(self)
 
+        self.enemy_sprite_shadow.draw()
+        self.enemy_sprite_shadow.update_animation(self)
+
         # Show intro and instructions for game
         arcade.draw_text("SPACE - Shoot", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
                          arcade.color.YELLOW, font_size=33, anchor_x="center", font_name="arc")
@@ -105,10 +114,11 @@ class IntroView(arcade.View):
 class GameOverView(arcade.View):
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("Game over!", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
-                         arcade.color.YELLOW, font_size=30, anchor_x="center")
-        arcade.draw_text("Hit SPACE to start new game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 250,
-                         arcade.color.YELLOW, font_size=30, anchor_x="center")
+        arcade.load_font(resource_path("fonts/arc.ttf"))
+        arcade.draw_text("Game  over!", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
+                         arcade.color.YELLOW, font_size=60, anchor_x="center", font_name="arc")
+        arcade.draw_text("Hit  SPACE  to  start  new  game", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 250,
+                         arcade.color.YELLOW, font_size=35, anchor_x="center", font_name="arc")
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.SPACE or key == arcade.key.ESCAPE:
@@ -194,6 +204,7 @@ class GameView(arcade.View):
         self.shadow_list = None
         self.shadow_freeze_time = None
         self.shadow_freeze = None
+        self.shadow_sound_was_paused = None
 
         self.water_used_in_rooms = []
         self.question_used_in_rooms = []
@@ -231,6 +242,7 @@ class GameView(arcade.View):
         self.shadow_freeze = False
         self.shadow_freeze_time = 0
         pygame.mixer.Sound.stop(self.shadow_sound)
+        self.shadow_sound_was_paused = False
 
         # Set black background
         arcade.set_background_color(arcade.color.BLACK)
@@ -481,6 +493,8 @@ class GameView(arcade.View):
 
         if key == arcade.key.ESCAPE:
             pause = PauseView(self)
+            pygame.mixer.Sound.stop(self.shadow_sound)
+            self.shadow_sound_was_paused = True
             self.window.show_view(pause)
 
     def on_key_release(self, key, modifiers):
@@ -680,6 +694,10 @@ class GameView(arcade.View):
                     shad.center_y += 2
                 else:
                     shad.center_y -= 2
+
+                if self.shadow_sound_was_paused:
+                    self.shadow_sound_was_paused = False
+                    pygame.mixer.Sound.play(self.shadow_sound, -1)
             else:
                 self.shadow_freeze_time += delta_time
                 if int(self.shadow_freeze_time) % 60 > 1:
