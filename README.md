@@ -4,16 +4,24 @@ Clone of the old DOS game "shamus".
 The screenshot of the original game:
 ![img](docs/original_game.png?raw=true "Screenshot")
 
-Rooms and levels map:
+## Rooms and levels map:
 
 ![img](docs/levels_map.png?raw=true "Screenshot")
 
-# How to run:
+## Requirements:
+> Python >= v3.8
 
-1 - install required modules
+## How to run:
+1. Install required modules
 
-    pip install pygame arcade
+    > *pip install pygame arcade*
 
-2 - run the game:
+2. Run the game:
 
-    python main.py
+    > *python main.py*
+
+## TODO list:
+- [x] Shadow
+- [x] End game
+- [ ] Enemy shoots
+- [ ] Player collision with walls

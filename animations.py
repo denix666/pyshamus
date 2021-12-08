@@ -1,5 +1,7 @@
 from constants import *
 from helpers import *
+import random
+import math
 
 
 class EnemyExplosion(arcade.Sprite):
@@ -61,3 +63,51 @@ class DoorOpenAnimation(arcade.Sprite):
                 return
             self.texture = self.door_animation_textures[self.cur_texture]
             self.center_y += 2  # How many pixels less every slide too keep it on top
+
+
+class Particle(arcade.SpriteCircle):
+    def __init__(self, my_list):
+        # Choose a random color
+        color = random.choice(PARTICLE_COLORS)
+
+        # Make the particle
+        super().__init__(PARTICLE_RADIUS, color)
+
+        # Track normal particle texture, so we can 'flip' when we sparkle.
+        self.normal_texture = self.texture
+
+        # Keep track of the list we are in, so we can add a smoke trail
+        self.my_list = my_list
+
+        # Set direction/speed
+        speed = random.random() * PARTICLE_SPEED_RANGE + PARTICLE_MIN_SPEED
+        direction = random.randrange(360)
+        self.change_x = math.sin(math.radians(direction)) * speed
+        self.change_y = math.cos(math.radians(direction)) * speed
+
+        # Track original alpha. Used as part of 'sparkle' where we temp set the
+        # alpha back to 255
+        self.my_alpha = 255
+
+        # What list do we add smoke particles to?
+        self.my_list = my_list
+
+    def update(self):
+        if self.my_alpha <= PARTICLE_FADE_RATE:
+            # Faded out, remove
+            self.remove_from_sprite_lists()
+        else:
+            # Update
+            self.my_alpha -= PARTICLE_FADE_RATE
+            self.alpha = self.my_alpha
+            self.center_x += self.change_x
+            self.center_y += self.change_y
+            self.change_y -= PARTICLE_GRAVITY
+
+            # Should we sparkle this?
+            if random.random() <= PARTICLE_SPARKLE_CHANCE:
+                self.alpha = 255
+                self.texture = arcade.make_circle_texture(int(self.width),
+                                                          arcade.color.WHITE)
+            else:
+                self.texture = self.normal_texture

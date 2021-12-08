@@ -2,7 +2,6 @@
 
 # -*- coding: utf-8 -*-
 
-import random
 import time
 import arcade.color
 import pygame
@@ -166,10 +165,13 @@ class GameView(arcade.View):
         self.key_sound = arcade.load_sound(resource_path("sounds/key.wav"))
         self.life_sound = arcade.load_sound(resource_path("sounds/life.wav"))
         self.game_over_sound = arcade.load_sound(resource_path("sounds/game_over.wav"))
+        self.shadow_explosion_sound = arcade.load_sound(resource_path("sounds/explosion2.wav"))
         self.opening_door_sound = arcade.load_sound(resource_path("sounds/opening_door.wav"))
         self.question_sound = arcade.load_sound(resource_path("sounds/question.wav"))
         self.enemy_destroyed_sound = arcade.load_sound(resource_path("sounds/enemy_destroyed.wav"))
         self.time_up_sound = arcade.load_sound(resource_path("sounds/time_up.wav"))
+
+        arcade.load_font(resource_path("fonts/arc.ttf"))
 
         self.player_list = None
         self.player_sprite = None
@@ -199,6 +201,9 @@ class GameView(arcade.View):
         self.water_list = None
         self.question_sprite = None
         self.question_list = None
+        self.end_game = None
+
+        self.shadow_explosions_list = None
 
         self.shadow_sprite = None
         self.shadow_list = None
@@ -243,6 +248,7 @@ class GameView(arcade.View):
         self.shadow_freeze_time = 0
         pygame.mixer.Sound.stop(self.shadow_sound)
         self.shadow_sound_was_paused = False
+        self.end_game = False
 
         # Set black background
         arcade.set_background_color(arcade.color.BLACK)
@@ -273,6 +279,7 @@ class GameView(arcade.View):
 
         # Shadow
         self.shadow_list = arcade.SpriteList()
+        self.shadow_explosions_list = arcade.SpriteList()
         self.shadow_sprite = Shadow()
 
         # Opening door animation
@@ -435,11 +442,12 @@ class GameView(arcade.View):
         arcade.start_render()
 
         # Draw rooms and units
-        self.player_list.draw()
         self.scene.draw()
         self.bullet_list.draw()
         self.enemy_explosion_list.draw()
         self.opening_door_list.draw()
+        self.shadow_explosions_list.draw()
+        #self.player_list.draw()
 
         # Draw game statuses (room, level, score)
         arcade.draw_text(f"Score: {self.score}", 10, 10, arcade.color.WHITE, 15)
@@ -478,6 +486,15 @@ class GameView(arcade.View):
                                           live_texture.height,
                                           live_texture, 0)
 
+        # Show end game text if game is over
+        if self.end_game:
+            arcade.draw_text("The  end", SCREEN_WIDTH - 300, SCREEN_HEIGHT / 2,
+                             arcade.color.YELLOW, font_size=40, anchor_x="center", font_name="arc")
+            arcade.draw_text("Thank  you  for  playing!", SCREEN_WIDTH - 300, SCREEN_HEIGHT / 2 - 50,
+                             arcade.color.YELLOW, font_size=33, anchor_x="center", font_name="arc")
+            arcade.draw_text("Press  escape  to  start  new  game", SCREEN_WIDTH - 300, SCREEN_HEIGHT / 2 - 100,
+                             arcade.color.YELLOW, font_size=24, anchor_x="center", font_name="arc")
+
     def on_key_press(self, key, modifiers):
         if key == arcade.key.UP:
             self.up_pressed = True
@@ -492,10 +509,14 @@ class GameView(arcade.View):
             self.fire_pressed = True
 
         if key == arcade.key.ESCAPE:
-            pause = PauseView(self)
-            pygame.mixer.Sound.stop(self.shadow_sound)
-            self.shadow_sound_was_paused = True
-            self.window.show_view(pause)
+            if self.end_game:
+                menu_view = IntroView()
+                self.window.show_view(menu_view)
+            else:
+                pause = PauseView(self)
+                pygame.mixer.Sound.stop(self.shadow_sound)
+                self.shadow_sound_was_paused = True
+                self.window.show_view(pause)
 
     def on_key_release(self, key, modifiers):
         if key == arcade.key.UP:
@@ -510,6 +531,11 @@ class GameView(arcade.View):
     # noinspection PyBroadException
     def on_update(self, delta_time):
         self.physics_engine.update()
+
+        self.shadow_explosions_list.update()
+
+        if self.end_game:
+            return
 
         # Check how many time player in the room, and play sound if it more than MAX_TIME_IN_THE_ROOM seconds
         self.time_in_room += delta_time
@@ -832,6 +858,17 @@ class GameView(arcade.View):
                 self.shadow_freeze = True
                 self.shadow_freeze_time = 0
                 pygame.mixer.Sound.stop(self.shadow_sound)
+
+                # If this is a last room and all enemy destroyed - make shadow explosion and end the game
+                if self.room == "95" and len(self.scene["Enemies"]) == 0:
+                    for shadow_hit in hit_list:
+                        self.shadow_explosion_sound.play()
+                        for i in range(PARTICLE_COUNT):
+                            particle = Particle(self.shadow_explosions_list)
+                            particle.position = shadow_hit.position
+                            self.shadow_explosions_list.append(particle)
+                        shadow_hit.remove_from_sprite_lists()
+                        self.end_game = True
 
             # Remove shoots that get out of the game field
             if bullet.center_x < 0 or bullet.center_x > SCREEN_WIDTH or \

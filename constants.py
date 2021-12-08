@@ -1,3 +1,4 @@
+import arcade.color
 """
 Global game constants
 """
@@ -49,3 +50,31 @@ QUESTION_ANIMATION_SPEED = 9
 MAX_TIME_IN_THE_ROOM = 12
 SHADOW_ANIMATION_SPEED = 5
 SHADOW_SCALING = 2
+
+# --- Explosion Particles Related
+
+# How fast the particle will accelerate down. Make 0 if not desired
+PARTICLE_GRAVITY = 0.05
+
+# How fast to fade the particle
+PARTICLE_FADE_RATE = 8
+
+# How fast the particle moves. Range is from 2.5 <--> 5 with 2.5 and 2.5 set.
+PARTICLE_MIN_SPEED = 2.5
+PARTICLE_SPEED_RANGE = 2.5
+
+# How many particles per explosion
+PARTICLE_COUNT = 20
+
+# How big the particle
+PARTICLE_RADIUS = 3
+
+# Possible particle colors
+PARTICLE_COLORS = [arcade.color.ALIZARIN_CRIMSON,
+                   arcade.color.COQUELICOT,
+                   arcade.color.LAVA,
+                   arcade.color.KU_CRIMSON,
+                   arcade.color.DARK_TANGERINE]
+
+# Chance we'll flip the texture to white and make it 'sparkle'
+PARTICLE_SPARKLE_CHANCE = 0.02
