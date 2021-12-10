@@ -170,6 +170,7 @@ class GameView(arcade.View):
         self.question_sound = arcade.load_sound(resource_path("sounds/question.wav"))
         self.enemy_destroyed_sound = arcade.load_sound(resource_path("sounds/enemy_destroyed.wav"))
         self.time_up_sound = arcade.load_sound(resource_path("sounds/time_up.wav"))
+        self.enemy_shoot_sound = arcade.load_sound(resource_path("sounds/enemy_shoot.wav"))
 
         arcade.load_font(resource_path("fonts/arc.ttf"))
 
@@ -179,6 +180,7 @@ class GameView(arcade.View):
         self.last_player_direction = None
         self.enemy_sprite = None
         self.bullet_list = None
+        self.enemy_bullet_list = None
         self.key_list = None
         self.key_sprite = None
         self.door_list = None
@@ -288,6 +290,9 @@ class GameView(arcade.View):
 
         # Init bullets list
         self.bullet_list = arcade.SpriteList()
+
+        # Init enemy bullets list
+        self.enemy_bullet_list = arcade.SpriteList()
 
         # Init key list
         self.key_list = arcade.SpriteList()
@@ -444,10 +449,10 @@ class GameView(arcade.View):
         # Draw rooms and units
         self.scene.draw()
         self.bullet_list.draw()
+        self.enemy_bullet_list.draw()
         self.enemy_explosion_list.draw()
         self.opening_door_list.draw()
         self.shadow_explosions_list.draw()
-        #self.player_list.draw()
 
         # Draw game statuses (room, level, score)
         arcade.draw_text(f"Score: {self.score}", 10, 10, arcade.color.WHITE, 15)
@@ -560,6 +565,7 @@ class GameView(arcade.View):
                 pygame.mixer.Sound.play(self.shadow_sound, -1)
 
         self.bullet_list.update()
+        self.enemy_bullet_list.update()
 
         try:
             self.scene.update_animation(
@@ -595,7 +601,7 @@ class GameView(arcade.View):
         except:
             pass
 
-        # TODO Проигрывание звука шагов при передвижении (improve sound effect)
+        # TODO improve walk sound effect
         if self.player_sprite.change_y or self.player_sprite.change_x:
             pygame.mixer.Sound.play(self.walk_sound, 0, 1)
 
@@ -754,9 +760,35 @@ class GameView(arcade.View):
                         arcade.check_for_collision_with_list(en, sprite_list=self.scene["Enemies"]):
                     en.center_x += 1
 
+            # TODO Enemy shooting
+            # Enemy will shoot only if it have clear line to the player to avoid shooting into walls
+            if len(self.enemy_bullet_list) < 2 + self.level:
+                random_shoot_window = 500 - 50 * self.level  # Bigger value - less shoots
+                if random.randrange(int(random_shoot_window * (1 / 60) / delta_time)) == 0:
+                    if arcade.has_line_of_sight(self.player_sprite.position, en.position, self.scene["Walls"]):
+                        enemy_bullet = arcade.Sprite(resource_path("images/enemy_bullet.png"), ENEMY_BULLET_SCALING)
+                        enemy_bullet.center_x = en.center_x
+                        enemy_bullet.center_y = en.center_y
+
+                        if en.center_y - 50 < self.player_sprite.center_y < en.center_y + 50:
+                            if en.center_x > self.player_sprite.center_x:
+                                enemy_bullet.change_x = -(ENEMY_BULLET_SPEED + self.level)
+                            else:
+                                enemy_bullet.change_x = (ENEMY_BULLET_SPEED + self.level)
+                            self.enemy_bullet_list.append(enemy_bullet)
+                            arcade.play_sound(self.enemy_shoot_sound)
+                        elif en.center_x - 50 < self.player_sprite.center_x < en.center_x + 50:
+                            if en.center_y > self.player_sprite.center_y:
+                                enemy_bullet.change_y = -(ENEMY_BULLET_SPEED + self.level)
+                            else:
+                                enemy_bullet.change_y = (ENEMY_BULLET_SPEED + self.level)
+                            self.enemy_bullet_list.append(enemy_bullet)
+                            arcade.play_sound(self.enemy_shoot_sound)
+
         # Check if player collided with enemy
         if arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.scene["Enemies"]) or \
-                arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.shadow_list):
+                arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.shadow_list) or \
+                arcade.check_for_collision_with_list(self.player_sprite, self.enemy_bullet_list):
             self.lives -= 1
             pygame.mixer.Sound.stop(self.shadow_sound)
             arcade.play_sound(self.die_sound)
@@ -827,6 +859,22 @@ class GameView(arcade.View):
                             opening_door.update()
                             self.opening_door_list.append(opening_door)
 
+        # Manage enemy bullet
+        for en_bullet in self.enemy_bullet_list:
+            hit_list = arcade.check_for_collision_with_list(en_bullet, sprite_list=self.scene["Player"])
+            if len(hit_list) > 0:
+                en_bullet.remove_from_sprite_lists()
+
+            # Remove shoots that get out of the game field
+            if en_bullet.center_x < 0 or en_bullet.center_x > SCREEN_WIDTH or \
+                    en_bullet.center_y < 0 or en_bullet.center_y > SCREEN_HEIGHT:
+                en_bullet.remove_from_sprite_lists()
+
+            # Remove shoots into wall
+            hit_list = arcade.check_for_collision_with_list(en_bullet, sprite_list=self.scene["Walls"])
+            if len(hit_list) > 0:
+                en_bullet.remove_from_sprite_lists()
+
         # Check if bullet destroyed something
         for bullet in self.bullet_list:
             hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.scene["Enemies"])
@@ -845,6 +893,15 @@ class GameView(arcade.View):
                 explosion.center_x = hit_list[0].center_x
                 explosion.update()
                 self.enemy_explosion_list.append(explosion)
+
+            # Check if player bullet removed enemy bullet
+            en_bullet_hit_list = arcade.check_for_collision_with_list(bullet, self.enemy_bullet_list)
+            if len(en_bullet_hit_list) > 0:
+                bullet.remove_from_sprite_lists()
+            for enemy_bullet in en_bullet_hit_list:
+                enemy_bullet.remove_from_sprite_lists()
+                self.score += 1
+                arcade.sound.play_sound(self.enemy_destroyed_sound)
 
             # Remove shoots into wall
             hit_list = arcade.check_for_collision_with_list(bullet, sprite_list=self.scene["Walls"])

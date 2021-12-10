@@ -23,5 +23,8 @@ The screenshot of the original game:
 ## TODO list:
 - [x] Shadow
 - [x] End game
-- [ ] Enemy shoots
+- [x] Enemy shoots
 - [ ] Player collision with walls
+- [ ] Improve enemy moving
+- [ ] Improve sound effects
+- [ ] Improve animation effects
