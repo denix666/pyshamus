@@ -2,7 +2,6 @@
 
 # -*- coding: utf-8 -*-
 
-import time
 import arcade.color
 import pygame
 from game_player import *
@@ -172,41 +171,54 @@ class GameView(arcade.View):
         self.time_up_sound = arcade.load_sound(resource_path("sounds/time_up.wav"))
         self.enemy_shoot_sound = arcade.load_sound(resource_path("sounds/enemy_shoot.wav"))
 
+        # Load fonts
         arcade.load_font(resource_path("fonts/arc.ttf"))
 
-        self.player_list = None
-        self.player_sprite = None
-        self.player_direction = None
-        self.last_player_direction = None
-        self.enemy_sprite = None
-        self.bullet_list = None
-        self.enemy_bullet_list = None
-        self.key_list = None
-        self.key_sprite = None
-        self.door_list = None
-        self.door_sprite = None
-        self.keyhole_list = None
-        self.keyhole_sprite = None
+        # Game start init vars
         self.room = "00"
         self.score = 0
         self.lives = 3
         self.level = 1
+
+        self.player_list = None
+        self.player_sprite = None
+        self.player_direction = None
+        self.player_pos_x = PLAYER_INIT_X
+        self.player_pos_y = PLAYER_INIT_Y
+        self.player_explosion_list = None
+        self.player_explosion_sprite = None
+        self.last_player_direction = None
+
+        self.enemy_sprite = None
+        self.enemy_explosion_list = None
+        self.enemy_explosion_sprite = None
+        self.enemy_bullet_list = None
+
+        self.bullet_list = None
+        self.bullet_direction = None
+
+        self.key_list = None
+        self.key_sprite = None
+
+        self.door_list = None
+        self.door_sprite = None
+
+        self.keyhole_list = None
+        self.keyhole_sprite = None
+
         self.tile_map = None
         self.scene = None
         self.physics_engine = None
-        self.player_pos_x = PLAYER_INIT_X
-        self.player_pos_y = PLAYER_INIT_Y
-        self.bullet_direction = None
-        self.enemy_explosion_list = None
-        self.enemy_explosion_sprite = None
+
         self.water_sprite = None
         self.water_list = None
+
         self.question_sprite = None
         self.question_list = None
+
         self.end_game = None
 
         self.shadow_explosions_list = None
-
         self.shadow_sprite = None
         self.shadow_list = None
         self.shadow_freeze_time = None
@@ -278,6 +290,10 @@ class GameView(arcade.View):
         # Enemy explosion animation
         self.enemy_explosion_list = arcade.SpriteList()
         self.enemy_explosion_sprite = EnemyExplosion()
+
+        # Player die animation
+        self.player_explosion_list = arcade.SpriteList()
+        self.player_explosion_sprite = PlayerExplosion()
 
         # Shadow
         self.shadow_list = arcade.SpriteList()
@@ -451,6 +467,7 @@ class GameView(arcade.View):
         self.bullet_list.draw()
         self.enemy_bullet_list.draw()
         self.enemy_explosion_list.draw()
+        self.player_explosion_list.draw()
         self.opening_door_list.draw()
         self.shadow_explosions_list.draw()
 
@@ -760,7 +777,6 @@ class GameView(arcade.View):
                         arcade.check_for_collision_with_list(en, sprite_list=self.scene["Enemies"]):
                     en.center_x += 1
 
-            # TODO Enemy shooting
             # Enemy will shoot only if it have clear line to the player to avoid shooting into walls
             if len(self.enemy_bullet_list) < 2 + self.level:
                 random_shoot_window = 500 - 50 * self.level  # Bigger value - less shoots
@@ -789,14 +805,29 @@ class GameView(arcade.View):
         if arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.scene["Enemies"]) or \
                 arcade.check_for_collision_with_list(self.player_sprite, sprite_list=self.shadow_list) or \
                 arcade.check_for_collision_with_list(self.player_sprite, self.enemy_bullet_list):
-            self.lives -= 1
+
             pygame.mixer.Sound.stop(self.shadow_sound)
             arcade.play_sound(self.die_sound)
-            time.sleep(1)
+
+            # Player die animation
+            player_explosion = PlayerExplosion()
+            player_explosion.center_y = self.player_sprite.center_y
+            player_explosion.center_x = self.player_sprite.center_x
+            player_explosion.update()
+            self.player_explosion_list.append(player_explosion)
+
+            if len(self.player_explosion_list) == 1:
+                return
+            else:
+                arcade.pause(1)
+
+            self.lives -= 1
+
             if self.lives < 1:
                 arcade.play_sound(self.game_over_sound)
                 game_view = GameOverView()
                 self.window.show_view(game_view)
+
             self.setup()
 
         # Check if we have water
