@@ -2,7 +2,7 @@ from game import *
 
 
 def main():
-    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, "PyShamus v0.2")
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     menu_view = IntroView()
     window.show_view(menu_view)
     arcade.run()

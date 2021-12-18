@@ -6,7 +6,7 @@ Global game constants
 # Main sizes
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 720
-SCREEN_TITLE = "PyShamus v0.3"
+SCREEN_TITLE = "PyShamus v0.4 beta"
 
 # Constants used to scale our sprites from their original size
 CHARACTER_SCALING = 1

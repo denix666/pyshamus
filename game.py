@@ -707,7 +707,8 @@ class GameView(arcade.View):
                 bullet.left = self.player_sprite.right
 
             if len(self.bullet_list) < ONE_TIME_MAX_BULLETS:
-                self.bullet_list.append(bullet)
+                if not self.player_sprite.change_y == 0 or not self.player_sprite.change_x == 0:
+                    self.bullet_list.append(bullet)
             self.fire_pressed = False
 
         # Moving from room to room
