@@ -1,12 +1,15 @@
 # pyshamus
 Clone of the old DOS game "shamus".
 
+The screenshot of the game (my clone):
+![img](docs/clone.png?raw=true "Screenshot")
+
 The screenshot of the original game:
 ![img](docs/original_game.png?raw=true "Screenshot")
 
 ## Rooms and levels map:
 
-![img](docs/levels_map.png?raw=true "Screenshot")
+![img](docs/level1_map.png?raw=true "Screenshot")
 
 ## Requirements:
 > Python >= v3.8
