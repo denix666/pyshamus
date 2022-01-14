@@ -1,0 +1,25 @@
+pkgname=pyshamus
+pkgver=0.6
+pkgrel=1
+pkgdesc="Clone of old DOS game SHAMUS"
+arch=("any")
+url="https://github.com/denix666/pyshamus"
+license=("GPLv3")
+makedepends=('python-setuptools')
+
+source=(
+    "pyshamus-${pkgver}.tar.gz"
+    "pyshamus.png"
+    "pyshamus.desktop"
+)
+
+package () {
+    depends+=('python')
+    
+    cd "${srcdir}/${pkgname}"
+    python setup.py install --root="${pkgdir}"
+    
+    cd "${srcdir}"
+    install -D -m644 pyshamus.png ${pkgdir}/usr/share/pixmaps/pyshamus.png
+    install -D -m644 pyshamus.desktop ${pkgdir}/usr/share/applications/pyshamus.desktop
+}
