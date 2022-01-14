@@ -14,14 +14,14 @@ The screenshot of the original game:
 ## Requirements:
 > Python >= v3.8
 
-## How to run:
-1. Install required modules
+## How to install and run:
+1. Install pyshamus package - enter to cloned directory and execute:
 
-    > *pip install pygame arcade*
+    > *pip install --user .*
 
-2. Run the game:
+2. Run the game - execute command:
 
-    > *python main.py*
+    > *pyshamus*
 
 ## TODO list:
 - [x] Shadow
