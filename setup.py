@@ -13,6 +13,7 @@ setup(name='pyshamus',
         '': ['*.ttf', '*.png', '*.mp3', '*.wav', '*.json'],
       },
       requires=[
+        'python (>=3.8.0)',
         'arcade (>=2.6.8)',
         'pygame (>=2.1.2)',
         ],

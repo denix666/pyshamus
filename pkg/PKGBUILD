@@ -1,16 +1,15 @@
 pkgname=pyshamus
 pkgver=0.6
-pkgrel=2
+pkgrel=3
 pkgdesc="Clone of old DOS game SHAMUS"
 arch=("any")
 url="https://github.com/denix666/pyshamus"
 license=("GPLv3")
 makedepends=('python-setuptools')
 
-source=(
-    "pyshamus-${pkgver}.tar.gz"
-    "pyshamus.png"
-    "pyshamus.desktop"
+source=("http://games.os.vc/pygames/pyshamus/pyshamus-${pkgver}.tar.gz"
+        "pyshamus.png"
+        "pyshamus.desktop"
 )
 
 package () {
